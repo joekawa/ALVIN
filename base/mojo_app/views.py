@@ -8,4 +8,20 @@ def index(request):
   base HTML template for the app.
   """
 
-  return HttpResponse("Hello, world. You're at the mojo index.")
+  return render(request, 'mojo_app/index.html')
+
+def login(request):
+  """
+  Renders the login page, which contains a form for users to
+  submit their email and password.
+  """
+  return render(request, 'mojo_app/login.html')
+
+
+def signup(request):
+  """
+  Renders the signup page, which contains a form for
+  users to submit their name, email, password, confirm password,
+  zip code, and date of birth.
+  """
+  return render(request, 'mojo_app/signup.html')
