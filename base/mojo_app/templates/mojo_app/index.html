@@ -18,9 +18,58 @@
                         <p>You don't have any upcoming trips planned. Why not create a new one?</p>
                     </div>
                 </div>
-                <button class="btn btn-primary" id="create-trip-button">Create a Trip</button>
-            </div>
-        </div>
+             <!-- Button to trigger the modal -->
+<button id="create-trip-button" class="btn btn-primary">Create Trip</button>
+
+<!-- Modal with form -->
+<div id="create-trip-modal" class="modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Create Trip</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <!-- Form fields go here -->
+          <label for="trip-name">Trip Name:</label>
+          <input type="text" id="trip-name" name="trip-name"><br><br>
+          <label for="trip-location">Trip Location:</label>
+          <input type="text" id="trip-location" name="trip-location"><br><br>
+          <label for="trip-start-date">Trip Start Date:</label>
+          <input type="date" id="trip-start-date" name="trip-start-date"><br><br>
+          <label for="trip-end-date">Trip End Date:</label>
+          <input type="date" id="trip-end-date" name="trip-end-date"><br><br>
+          <button type="submit" class="btn btn-primary">Create Trip</button>
+        </form>
+      </div>
     </div>
+  </div>
+</div>
+<script>
+  // Get the modal and button elements
+var modal = document.getElementById("create-trip-modal");
+var button = document.getElementById("create-trip-button");
+
+// Add event listener to button to open modal
+button.addEventListener("click", function() {
+  modal.style.display = "block";
+});
+
+// Add event listener to modal close button to close modal
+var closeButton = modal.querySelector(".close");
+closeButton.addEventListener("click", function() {
+  modal.style.display = "none";
+});
+
+// Add event listener to modal background to close modal
+window.addEventListener("click", function(event) {
+  if (event.target == modal) {
+    modal.style.display = "none";
+  }
+});
+</script>
 </body>
 </html>
