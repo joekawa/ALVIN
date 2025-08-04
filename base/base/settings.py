@@ -130,3 +130,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+AUTH_USER_MODEL = 'mojo_app.CustomUser'
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
