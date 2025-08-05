@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
-from django.contrib.auth import login
+from django.contrib.auth import login, logout
 from .forms import CustomUserCreationForm
 from .models import CustomUser
 # Create your views here.
@@ -19,13 +19,14 @@ def login_view(request):
   submit their email and password.
   """
   if request.method == 'POST':
-    username = request.POST.get('username')
+    email = request.POST.get('email')
     password = request.POST.get('password')
-    print(username)
-    print(password)
-    return redirect('mojo:index')
+    user = CustomUser.objects.filter(email=email).first()
+    if user and user.check_password(password):
+      login(request, user)
+      return redirect('mojo:index')
 
-  return render(request, 'mojo_app/log_in.html')
+  return render(request, 'mojo_app/login.html')
 
 
 def signup(request):
@@ -49,3 +50,8 @@ def signup(request):
       print("form is not valid")
   form = CustomUserCreationForm()
   return render(request, 'mojo_app/signup.html', {'form': form})
+
+
+def logout_view(request):
+    logout(request)
+    return redirect('index')

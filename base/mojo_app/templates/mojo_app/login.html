@@ -14,8 +14,8 @@
                 <form method="post">
                   {% csrf_token %}
                     <div class="form-group">
-                        <label for="username">Username</label>
-                        <input type="text" class="form-control" id="username" name="username" placeholder="Enter username">
+                        <label for="email">Email</label>
+                        <input type="text" class="form-control" id="email" name="email" placeholder="Enter email">
                     </div>
                     <div class="form-group">
                         <label for="password">Password</label>
@@ -23,7 +23,7 @@
                     </div>
                     <button type="submit" class="btn btn-primary">Login</button>
                 </form>
-                <p>Don't have an account? <a href="{% url 'signup' %}">Sign up here</a></p>
+                <p>Don't have an account? <a href="{% url 'mojo:signup' %}">Sign up here</a></p>
             </div>
         </div>
     </div>
