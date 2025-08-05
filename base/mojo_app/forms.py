@@ -5,7 +5,7 @@ from .models import CustomUser, STATES
 from django.contrib.auth import *
 
 class CustomUserCreationForm(UserCreationForm):
-    username = EmailField(required=True,
+    email = EmailField(required=True,
                              widget=EmailInput(
                                 attrs={'class': "form-control",
                                        'placeholder': "Email"}))
@@ -35,5 +35,5 @@ class CustomUserCreationForm(UserCreationForm):
 
     class Meta:
         model = CustomUser
-        fields = ('username', 'city', 'state', 'zip_code', 'dob',
+        fields = ('email', 'city', 'state', 'zip_code', 'dob',
                   'password1', 'password2')
