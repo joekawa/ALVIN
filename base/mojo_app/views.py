@@ -11,7 +11,7 @@ def index(request):
   base HTML template for the app.
   """
 
-  return render(request, 'mojo_app/index.html', {'user': request.user})
+  return render(request, 'index.html', {'user': request.user})
 
 def login_view(request):
   """
@@ -26,7 +26,7 @@ def login_view(request):
       login(request, user)
       return redirect('mojo:index')
 
-  return render(request, 'mojo_app/login.html')
+  return render(request, 'login.html')
 
 
 def signup(request):
@@ -49,9 +49,19 @@ def signup(request):
     else:
       print("form is not valid")
   form = CustomUserCreationForm()
-  return render(request, 'mojo_app/signup.html', {'form': form})
+  return render(request, 'signup.html', {'form': form})
 
 
-def logout_view(request):
-    logout(request)
-    return redirect('index')
+def profile(request):
+
+  """
+  Renders the user's profile page.
+  """
+  return render(request, 'profile.html')
+
+
+def create_trip(request):
+  """
+  Renders the page for creating a new trip.
+  """
+  return render(request, 'create_trip.html')

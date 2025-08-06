@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="container">
+    <div class="row">
+      <div class="col-md-6 offset-md-3">
+        <h2>Create Trip</h2>
+        <form>
+          <div class="form-group">
+            <label for="trip_name">Trip Name</label>
+            <input type="text" class="form-control" id="trip_name" placeholder="Enter trip name">
+          </div>
+          <div class="form-group">
+            <label for="start_date">Start Date</label>
+            <input type="date" class="form-control" id="start_date" placeholder="Enter start date">
+          </div>
+          <div class="form-group">
+            <label for="end_date">End Date</label>
+            <input type="date" class="form-control" id="end_date" placeholder="Enter end date">
+          </div>
+          <div class="form-group">
+            <label for="location">Location</label>
+            <input type="text" class="form-control" id="location" placeholder="Enter location">
+          </div>
+          <button type="submit" class="btn btn-primary">Create Trip</button>
+        </form>
+      </div>
+    </div>
+  </div>
+{% endblock %}

@@ -7,8 +7,10 @@ app_name = 'mojo'
 
 urlpatterns = [
   path('', views.index, name='index'),
-  path('login', views.login_view, name='login'),
-  path('signup', views.signup, name='signup'),
+  path('login/', views.login_view, name='login'),
+  path('signup/', views.signup, name='signup'),
+  path('profile/', views.profile, name='profile'),
+  path('create_trip/', views.create_trip, name='create_trip'),
   path('logout/', LogoutView.as_view(next_page='mojo:login'), name='logout'),
 ]
 

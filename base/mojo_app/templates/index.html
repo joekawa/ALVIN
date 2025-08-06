@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block content %}
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-sm-12 col-xs-12">
+                <h1>Welcome, {{ user.email }}!</h1>
+                <p>We're glad you're here. Here's a quick overview of your upcoming trips:</p>
+                <div class="card">
+                    <div class="card-body">
+                        <h2>No Upcoming Trips</h2>
+                        <p>You don't have any upcoming trips planned. Why not create a new one?</p>
+                    </div>
+                </div>
+             <!-- Button to trigger the modal -->
+<button id="create-trip-button" class="btn btn-primary mt-3"
+onclick="window.location.href='{% url 'mojo:create_trip' %}'">Create Trip</button>
+{% endblock %}
+
+</html>

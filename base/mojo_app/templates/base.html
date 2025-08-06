@@ -1,0 +1,37 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My App</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+  <script src="{% static 'mojo_app/css/styles.css' %}"></script>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="{% url 'mojo:index' %}">Mojo Travel</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto">
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Menu
+          </a>
+          <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
+            <a class="dropdown-item" href="{% url 'mojo:index' %}">My Dashboard</a>
+            <a class="dropdown-item" href="{% url 'mojo:profile' %}">Profile</a>
+            <a class="dropdown-item" href="{% url 'mojo:logout' %}">Sign out</a>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </nav>
+  <div class="container">
+    {% block content %}{% endblock %}
+  </div>
+</body>
+</html>
