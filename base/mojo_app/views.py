@@ -1,17 +1,20 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.contrib.auth import login, logout
-from .forms import CustomUserCreationForm
-from .models import CustomUser
+from .forms import CustomUserCreationForm, TripCreationForm
+from .models import CustomUser, Trip, Activity
+from django.contrib.auth.decorators import login_required
 # Create your views here.
 
+@login_required(login_url='mojo:login')
 def index(request):
-  """
-  The main entry point of the app. This function renders the
-  base HTML template for the app.
-  """
+    """
+    Renders the index page, which contains a list of trips
+    created by the currently logged in user.
+    """
+    trips = Trip.objects.filter(created_by=request.user)
+    return render(request, 'index.html', {'user': request.user, 'trips': trips})
 
-  return render(request, 'index.html', {'user': request.user})
 
 def login_view(request):
   """
@@ -65,3 +68,40 @@ def create_trip(request):
   Renders the page for creating a new trip.
   """
   return render(request, 'create_trip.html')
+
+
+
+def create_trip(request):
+    if request.method == 'POST':
+        form = TripCreationForm(request.POST)
+        if form.is_valid():
+            trip = form.save(commit=False)
+            trip.created_by = request.user
+            trip.save()
+            print("Trip created:", trip)
+            return redirect('mojo:index')
+    else:
+        form = TripCreationForm()
+    return render(request, 'create_trip.html', {'form': form})
+
+
+@login_required(login_url='mojo:login')
+def trip(request, trip_id):
+    trip = Trip.objects.get(id=trip_id)
+    return render(request, 'trip.html', {'trip': trip})
+
+
+@login_required(login_url='mojo:login')
+def add_activity(request, trip_id):
+    """
+    Handles POST requests from the trip details page
+    to add a new activity to the specified trip.
+    Redirects back to the trip details page after adding the activity.
+    """
+
+    trip = Trip.objects.get(id=trip_id)
+    if request.method == 'POST':
+        activity_name = request.POST.get('activity_name')
+        activity = Activity(name=activity_name, trip=trip)
+        activity.save()
+    return redirect('mojo:trip', trip_id)

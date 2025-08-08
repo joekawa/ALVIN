@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block content %}
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-sm-12 col-xs-12">
+                <h1>Trip Details</h1>
+                <p>Trip Name: {{ trip.trip_name }}</p>
+                <p>Destination: {{ trip.destination }}</p>
+                <p>Start Date: {{ trip.start_date }}</p>
+                <p>End Date: {{ trip.end_date }}</p>
+                <h2>Activities</h2>
+                <ul>
+                    {% for activity in activities %}
+                        <li>{{ activity.name }}</li>
+                    {% empty %}
+                        <p>No activities added yet.</p>
+                    {% endfor %}
+                </ul>
+                <h2>Itinerary</h2>
+                <p>This will be populated as more details of the trip get added.</p>
+                <form method="post" action="{% url 'mojo:add_activity' trip.id %}">
+                    {% csrf_token %}
+                    <input type="text" name="activity_name" placeholder="Add activity">
+                    <button type="submit" class="btn btn-primary">Add Activity</button>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

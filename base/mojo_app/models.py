@@ -158,3 +158,8 @@ class Trip(models.Model):
 
     def __str__(self):
         return self.trip_name
+
+
+class Activity(models.Model):
+    name = models.CharField(max_length=255)
+    trip = models.ForeignKey(Trip, on_delete=models.CASCADE)

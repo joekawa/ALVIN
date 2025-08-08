@@ -1,30 +1,32 @@
 {% extends 'base.html' %}
 
 {% block content %}
-  <div class="container">
-    <div class="row">
-      <div class="col-md-6 offset-md-3">
-        <h2>Create Trip</h2>
-        <form>
-          <div class="form-group">
-            <label for="trip_name">Trip Name</label>
-            <input type="text" class="form-control" id="trip_name" placeholder="Enter trip name">
-          </div>
-          <div class="form-group">
-            <label for="start_date">Start Date</label>
-            <input type="date" class="form-control" id="start_date" placeholder="Enter start date">
-          </div>
-          <div class="form-group">
-            <label for="end_date">End Date</label>
-            <input type="date" class="form-control" id="end_date" placeholder="Enter end date">
-          </div>
-          <div class="form-group">
-            <label for="location">Location</label>
-            <input type="text" class="form-control" id="location" placeholder="Enter location">
-          </div>
-          <button type="submit" class="btn btn-primary">Create Trip</button>
-        </form>
+<div class="container">
+  <div class="row justify-content-center">
+      <div class="col-md-4 col-sm-6 col-xs-12">
+          <h2>Create Trip</h2>
+          <form method="post" action="{% url 'mojo:create_trip' %}">
+            {% csrf_token %}
+
+              <div class="form-group">
+                  {{ form.trip_name.label }}
+                  {{ form.trip_name }}
+              </div>
+              <div class="form-group">
+                  {{ form.destination.label }}
+                  {{ form.destination }}
+              </div>
+              <div class="form-group">
+                  {{ form.start_date.label }}
+                  {{ form.start_date }}
+              </div>
+              <div class="form-group">
+                  {{ form.end_date.label }}
+                  {{ form.end_date }}
+              </div>
+              <button type="submit" class="btn btn-primary">Create Trip</button>
+          </form>
       </div>
-    </div>
   </div>
+</div>
 {% endblock %}
