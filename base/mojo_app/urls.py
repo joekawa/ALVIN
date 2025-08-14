@@ -14,6 +14,6 @@ urlpatterns = [
   path('logout/', LogoutView.as_view(next_page='mojo:login'), name='logout'),
   path('trip/<int:trip_id>/details/', views.trip, name='trip'),
   path('trip/<int:trip_id>/add_activity/', views.add_activity, name='add_activity'),
-
+  path('trip/<int:trip_id>/trip_details/', views.generate_itinerary, name='generate_itinerary'),
 ]
 

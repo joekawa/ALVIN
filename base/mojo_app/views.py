@@ -1,9 +1,14 @@
 from django.shortcuts import render, redirect
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.contrib.auth import login, logout
 from .forms import CustomUserCreationForm, TripCreationForm
-from .models import CustomUser, Trip, Activity
+from .models import CustomUser, Trip, Activity, ModelSuggestions
 from django.contrib.auth.decorators import login_required
+from openai import OpenAI
+from pydantic import BaseModel
+import json
+from typing import List
+
 # Create your views here.
 
 @login_required(login_url='mojo:login')
@@ -72,6 +77,16 @@ def create_trip(request):
 
 
 def create_trip(request):
+    """
+    Handles GET and POST requests for creating a new trip.
+
+    On a GET, renders the create_trip.html template with a blank
+    TripCreationForm.
+
+    On a valid POST, creates a new Trip object in the database with
+    the submitted form data, associates it with the currently logged
+    in user, and redirects to the index page.
+    """
     if request.method == 'POST':
         form = TripCreationForm(request.POST)
         if form.is_valid():
@@ -88,7 +103,9 @@ def create_trip(request):
 @login_required(login_url='mojo:login')
 def trip(request, trip_id):
     trip = Trip.objects.get(id=trip_id)
-    return render(request, 'trip.html', {'trip': trip})
+    activities = trip.activity_set.all()
+    return render(request, 'trip.html', {'trip': trip,
+                                         'activities': activities})
 
 
 @login_required(login_url='mojo:login')
@@ -105,3 +122,57 @@ def add_activity(request, trip_id):
         activity = Activity(name=activity_name, trip=trip)
         activity.save()
     return redirect('mojo:trip', trip_id)
+
+
+def generate_itinerary(request, trip_id):
+  """
+  Generates an itinerary for a specified trip using OpenAI's API.
+
+  This function retrieves the trip and its associated activities based on the
+  provided trip ID. It then generates an itinerary using OpenAI's API by
+  passing the trip's destination and dates, along with the names of the
+  first three activities. Finally, it returns the generated itinerary in a
+  JSON response.
+
+  Args:
+      request: The HTTP request object.
+      trip_id: The ID of the trip for which the itinerary is being generated.
+
+  Returns:
+      JsonResponse: A JSON response containing the generated itinerary.
+  """
+  trip = Trip.objects.get(id=trip_id)
+  activities = Activity.objects.filter(trip=trip)
+  client = OpenAI()
+  serialized_start_date = trip.start_date.strftime("%Y-%m-%d")
+  serialized_end_date = trip.end_date.strftime("%Y-%m-%d")
+
+
+  response = client.responses.create(
+    prompt={
+      "id": "pmpt_689aa94df76081969364c2e3d862e62c0b311c5f4b4a4ab7",
+      "version": "4",
+      "variables": {
+        "city": trip.destination,
+        "startdate": serialized_start_date,
+        "enddate": serialized_end_date,
+        "activity_1": activities[0].name,
+        "activity_2": activities[1].name,
+        "activity_3": activities[2].name
+      }
+    }
+)
+
+  activities_list = json.loads(response.output[0].content[0].text)
+  print(activities_list[0])
+  for activity in activities_list:
+    ModelSuggestions.objects.create(
+      trip=trip,
+      activity_name=activity['activity_name'],
+      activity_description=activity['activity_description'],
+      place=activity['place'],
+      place_url=activity['place_url']
+    )
+
+  return render(request, 'trip_details.html', {'activity_list': activities_list, 'trip': trip})
+

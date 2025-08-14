@@ -19,13 +19,28 @@
                         <p>No activities added yet.</p>
                     {% endfor %}
                 </ul>
-                <h2>Itinerary</h2>
-                <p>This will be populated as more details of the trip get added.</p>
                 <form method="post" action="{% url 'mojo:add_activity' trip.id %}">
-                    {% csrf_token %}
-                    <input type="text" name="activity_name" placeholder="Add activity">
-                    <button type="submit" class="btn btn-primary">Add Activity</button>
-                </form>
+                  {% csrf_token %}
+                  <input type="text" name="activity_name" placeholder="Add activity">
+                  <button type="submit" class="btn btn-primary">Add Activity</button>
+              </form>
+              <form method ="post" action="{% url 'mojo:generate_itinerary' trip.id %}">
+                {% csrf_token %}
+                <button id="generate-itinerary-btn">Generate Itinerary</button>
+              </form>
+              <h2>Itinerary</h2>
+              <p id="itinerary"></p>
+              <div class="row">
+                      {% for activity in model_suggestions %}
+<div class="card">
+  <div class="card-body">
+    <h5 class="card-title">{{ activity.activity_name }}</h5>
+    <p class="card-text">{{ activity.activity_description }}</p>
+    <p class="card-text">Location: <a href="{{ activity.place_url }}">{{ activity.place }}</a></p>
+  </div>
+</div>
+{% endfor %}
+                </div>
             </div>
         </div>
     </div>

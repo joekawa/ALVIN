@@ -163,3 +163,11 @@ class Trip(models.Model):
 class Activity(models.Model):
     name = models.CharField(max_length=255)
     trip = models.ForeignKey(Trip, on_delete=models.CASCADE)
+
+
+class ModelSuggestions(models.Model):
+    trip = models.ForeignKey(Trip, on_delete=models.CASCADE)
+    activity_name = models.CharField(max_length=255)
+    activity_description = models.TextField()
+    place = models.CharField(max_length=255)
+    place_url = models.URLField()

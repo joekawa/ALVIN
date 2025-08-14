@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block content %}
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-sm-12 col-xs-12">
+                <h1>Trip Details</h1>
+                <p>Trip Name: {{ trip.trip_name }}</p>
+                <p>Destination: {{ trip.destination }}</p>
+                <p>Start Date: {{ trip.start_date }}</p>
+                <p>End Date: {{ trip.end_date }}</p>
+                <h2>Activities</h2>
+                <ul>
+                    {% for activity in activities %}
+                        <li>{{ activity.name }}</li>
+                    {% empty %}
+                        <p>No activities added yet.</p>
+                    {% endfor %}
+                </ul>
+                <h2>Itinerary</h2>
+                <p id="itinerary"></p>
+                <div class="row">
+                        {% for activity in activity_list %}
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title">{{ activity.activity_name }}</h5>
+      <p class="card-text">{{ activity.activity_description }}</p>
+      <p class="card-text">Location: <a href="{{ activity.place_url }}">{{ activity.place }}</a></p>
+    </div>
+  </div>
+{% endfor %}
+                  </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
