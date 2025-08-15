@@ -28,6 +28,9 @@
       <h5 class="card-title">{{ activity.activity_name }}</h5>
       <p class="card-text">{{ activity.activity_description }}</p>
       <p class="card-text">Location: <a href="{{ activity.place_url }}">{{ activity.place }}</a></p>
+      <div>
+        <i class="far fa-thumbs-up"></i>
+        <i class="far fa-thumbs-down"></i>
     </div>
   </div>
 {% endfor %}

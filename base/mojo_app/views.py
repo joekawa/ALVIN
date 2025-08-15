@@ -105,8 +105,10 @@ def create_trip(request):
 def trip(request, trip_id):
     trip = Trip.objects.get(id=trip_id)
     activities = trip.activity_set.all()
+    model_suggestions = ModelSuggestions.objects.filter(trip=trip)
     return render(request, 'trip.html', {'trip': trip,
-                                         'activities': activities})
+                                         'activities': activities,
+                                         'model_suggestions': model_suggestions})
 
 
 @login_required(login_url='mojo:login')
@@ -124,7 +126,7 @@ def add_activity(request, trip_id):
         activity.save()
     return redirect('mojo:trip', trip_id)
 
-
+@login_required(login_url='mojo:login')
 def generate_itinerary(request, trip_id):
   """
   Generates an itinerary for a specified trip using OpenAI's API.
@@ -176,5 +178,5 @@ def generate_itinerary(request, trip_id):
       place_url=activity['place_url']
     )
 
-  return render(request, 'trip_details.html', {'activity_list': activities_list, 'trip': trip})
+  return redirect('mojo:trip', trip_id)
 

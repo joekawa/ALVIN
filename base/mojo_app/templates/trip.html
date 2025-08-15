@@ -31,15 +31,20 @@
               <h2>Itinerary</h2>
               <p id="itinerary"></p>
               <div class="row">
-                      {% for activity in model_suggestions %}
-<div class="card">
+                      {% for activity_suggestion in model_suggestions %}
+<div class="card mb-3">
   <div class="card-body">
-    <h5 class="card-title">{{ activity.activity_name }}</h5>
-    <p class="card-text">{{ activity.activity_description }}</p>
-    <p class="card-text">Location: <a href="{{ activity.place_url }}">{{ activity.place }}</a></p>
+    <h5 class="card-title">{{ activity_suggestion.activity_name }}</h5>
+    <p class="card-text">{{ activity_suggestion.activity_description }}</p>
+    <p class="card-text">Location: <a href="{{ activity_suggestion.place_url }}">{{ activity_suggestion.place }}</a></p>
+    <div>
+      <i class="far fa-thumbs-up"></i>
+      <i class="far fa-thumbs-down"></i>
   </div>
 </div>
+</div>
 {% endfor %}
+
                 </div>
             </div>
         </div>
