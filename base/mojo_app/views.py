@@ -164,6 +164,9 @@ def generate_itinerary(request, trip_id):
 )
 
   activities_list = json.loads(response.output[0].content[0].text)
+
+# If there are already suggestions for this trip, delete them
+  ModelSuggestions.objects.filter(trip=trip).delete()
   for activity in activities_list:
     ModelSuggestions.objects.create(
       trip=trip,
