@@ -4,6 +4,7 @@ from django.contrib.auth import login, logout
 from .forms import CustomUserCreationForm, TripCreationForm
 from .models import CustomUser, Trip, Activity, ModelSuggestions
 from django.contrib.auth.decorators import login_required
+from django.core.serializers import serialize
 from openai import OpenAI
 from pydantic import BaseModel
 import json
@@ -146,25 +147,23 @@ def generate_itinerary(request, trip_id):
   client = OpenAI()
   serialized_start_date = trip.start_date.strftime("%Y-%m-%d")
   serialized_end_date = trip.end_date.strftime("%Y-%m-%d")
+  serialized_activities = serialize('json', activities)
 
 
   response = client.responses.create(
     prompt={
-      "id": "pmpt_689aa94df76081969364c2e3d862e62c0b311c5f4b4a4ab7",
-      "version": "4",
-      "variables": {
-        "city": trip.destination,
-        "startdate": serialized_start_date,
-        "enddate": serialized_end_date,
-        "activity_1": activities[0].name,
-        "activity_2": activities[1].name,
-        "activity_3": activities[2].name
+        "id": "pmpt_689e839191808196aee8f2537e3c63770d2c7182b27d433c",
+        "version": "3",
+        "variables": {
+          "travel_destination": trip.destination,
+          "trip_start_date": serialized_start_date,
+          "trip_end_date": serialized_end_date,
+          "activities": serialized_activities
       }
     }
 )
 
   activities_list = json.loads(response.output[0].content[0].text)
-  print(activities_list[0])
   for activity in activities_list:
     ModelSuggestions.objects.create(
       trip=trip,
