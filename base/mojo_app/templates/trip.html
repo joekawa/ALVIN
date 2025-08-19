@@ -1,7 +1,5 @@
 {% extends 'base.html' %}
 
-{% load static %}
-
 {% block content %}
     <div class="container">
         <div class="row justify-content-center">
@@ -32,7 +30,8 @@
               <p id="itinerary"></p>
               <div class="row">
                       {% for activity_suggestion in model_suggestions %}
-<div class="card mb-3">
+<div class="col-md-4 mb-3">
+                      <div class="card">
   <div class="card-body">
     <h5 class="card-title">{{ activity_suggestion.activity_name }}</h5>
     <p class="card-text">{{ activity_suggestion.activity_description }}</p>
@@ -41,6 +40,7 @@
       <i class="far fa-thumbs-up"></i>
       <i class="far fa-thumbs-down"></i>
   </div>
+</div>
 </div>
 </div>
 {% endfor %}

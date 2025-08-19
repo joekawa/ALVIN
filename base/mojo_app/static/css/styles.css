@@ -1,0 +1,25 @@
+html {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.row {
+  display: flex; /* make the row a flex container */
+}
+
+.col-md-4 {
+  display: flex; /* make the column a flex container */
+  flex-direction: column; /* make the column content vertical */
+}
+
+.card {
+  flex: 1; /* make the cards equal height */
+  display: flex; /* make the card a flex container */
+  flex-direction: column; /* make the card content vertical */
+}
+
+.card-body {
+  flex: 1; /* make the card body take up the rest of the space */
+}

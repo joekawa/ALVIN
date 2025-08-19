@@ -1,5 +1,6 @@
 from django.urls import path
 from django.contrib.auth.views import LogoutView
+from django.contrib.staticfiles import views
 
 from . import views
 
@@ -15,5 +16,6 @@ urlpatterns = [
   path('trip/<int:trip_id>/details/', views.trip, name='trip'),
   path('trip/<int:trip_id>/add_activity/', views.add_activity, name='add_activity'),
   path('trip/<int:trip_id>/trip_details/', views.generate_itinerary, name='generate_itinerary'),
+  
 ]
 
