@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse, JsonResponse
 from django.contrib.auth import login, logout
 from .forms import CustomUserCreationForm, TripCreationForm
-from .models import CustomUser, Trip, Activity, ModelSuggestions
+from .models import *
 from django.contrib.auth.decorators import login_required
 from django.core.serializers import serialize
 from openai import OpenAI

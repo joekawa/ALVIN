@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
+import uuid
 
 
 STATES = (
@@ -148,26 +149,106 @@ class CustomUser(AbstractBaseUser):
         """
         return self.is_admin
 
-
 class Trip(models.Model):
+    uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     trip_name = models.CharField(max_length=255)
     destination = models.CharField(max_length=255)
     start_date = models.DateField()
     end_date = models.DateField()
     created_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
 
     def __str__(self):
-        return self.trip_name
+        """
+        Returns the string representation of the object, which is the name of the trip
+        followed by the username of the user who created the trip in parentheses.
+
+        Example:
+            "Trip to Disneyland (john)"
+        """
+        return f"{self.name}"
 
 
-class Activity(models.Model):
-    name = models.CharField(max_length=255)
+
+class TripParticipant(models.Model):
+    ROLE_CHOICES = [
+        ("owner", "Owner"),
+        ("contributor", "Contributor"),  # can add/remove activities
+        ("viewer", "Viewer"),  # read-only
+    ]
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     trip = models.ForeignKey(Trip, on_delete=models.CASCADE)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    role = models.CharField(max_length=16, choices=ROLE_CHOICES,
+                            default="contributor")
+    invited_at = models.DateTimeField(auto_now_add=True)
+    class Meta:
+            unique_together = ("trip", "user")
+
+    def __str__(self):
+
+        """
+        Returns a string representation of the object, which is the username of the user
+        followed by the role in parentheses, followed by the name of the trip.
+
+        Example:
+            "john (contributor) in Trip to Disneyland"
+        """
+
+        return f"{self.user.username} ({self.role}) in {self.trip.name}"
 
 
-class ModelSuggestions(models.Model):
-    trip = models.ForeignKey(Trip, on_delete=models.CASCADE)
+
+#* THIS IS THE ACTIVITY A USER WANTS TO DO ON THE TRIP
+class UserEnteredActivity(models.Model):
     activity_name = models.CharField(max_length=255)
-    activity_description = models.TextField()
-    place = models.CharField(max_length=255)
-    place_url = models.URLField()
+    trip = models.ForeignKey(Trip, on_delete=models.CASCADE)
+    created_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+
+#* THIS IS THE ACTIVITY THE MODEL SUGGESTED
+class ModelTripActivity(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=255)
+    activity_type = models.CharField(max_length=100, blank=True)
+    description = models.TextField(blank=True)
+    location_string = models.CharField(max_length=255, help_text="Raw GPT-provided location string")
+    address = models.CharField(max_length=255, blank=True)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+    source = models.CharField(max_length=50, default="chatgpt")  # or user_input, api, etc.
+    created_at = models.DateTimeField(auto_now_add=True)
+    url = models.URLField(blank=True)
+    trip = models.ForeignKey(Trip, on_delete=models.CASCADE)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["latitude", "longitude"]),  # supports geo queries
+        ]
+
+    def __str__(self):
+        return self.name
+
+#* THIS IS HOW THE USER REACTED TO THE MODEL SUGGESTION
+class TripActivityDetails(models.Model):
+    STATUS_CHOICES = [
+        ("wishlist", "Wishlist"),
+        ("saved", "Saved"),
+        ("visited", "Visited"),
+        ("rejected", "Rejected"),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name="trip_locations")
+    place = models.ForeignKey(ModelTripActivity, on_delete=models.CASCADE, related_name="trip_locations")
+    notes = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="wishlist")
+    created_at = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+
+
+    class Meta:
+        unique_together = ("trip", "place")  # prevents duplicates
+
+    def __str__(self):
+        return f"{self.location.name} for {self.trip.name}"
