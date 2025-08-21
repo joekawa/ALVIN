@@ -143,8 +143,8 @@ def generate_itinerary(request, trip_id):
   Returns:
       JsonResponse: A JSON response containing the generated itinerary.
   """
-  trip = Trip.objects.get(id=trip_id)
-  activities = Activity.objects.filter(trip=trip)
+  trip = Trip.objects.get(uuid = trip_id)
+  activities = UserEnteredActivity.objects.filter(trip=trip)
   client = OpenAI()
   serialized_start_date = trip.start_date.strftime("%Y-%m-%d")
   serialized_end_date = trip.end_date.strftime("%Y-%m-%d")
@@ -167,14 +167,14 @@ def generate_itinerary(request, trip_id):
   activities_list = json.loads(response.output[0].content[0].text)
 
 # If there are already suggestions for this trip, delete them
-  ModelSuggestions.objects.filter(trip=trip).delete()
+  ModelTripActivity.objects.filter(trip=trip).delete()
   for activity in activities_list:
-    ModelSuggestions.objects.create(
+    ModelTripActivity.objects.create(
       trip=trip,
-      activity_name=activity['activity_name'],
-      activity_description=activity['activity_description'],
-      place=activity['place'],
-      place_url=activity['place_url']
+      name=activity['activity_name'],
+      description=activity['activity_description'],
+      location_string=activity['place'],
+      url=activity['place_url']
     )
 
   return redirect('mojo:trip', trip_id)

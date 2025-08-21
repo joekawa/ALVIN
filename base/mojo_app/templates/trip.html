@@ -22,8 +22,7 @@
                   <input type="text" name="activity_name" placeholder="Add activity">
                   <button type="submit" class="btn btn-primary">Add Activity</button>
               </form>
-              <form method ="post" action="{% url 'mojo:generate_itinerary'
-              trip_id=trip.uuid %}">
+              <form method ="post" action="{% url 'mojo:generate_itinerary' trip_id=trip.uuid %}">
                 {% csrf_token %}
                 <button id="generate-itinerary-btn">Generate Itinerary</button>
               </form>
@@ -34,9 +33,9 @@
 <div class="col-md-4 mb-3">
                       <div class="card">
   <div class="card-body">
-    <h5 class="card-title">{{ activity_suggestion.activity_name }}</h5>
-    <p class="card-text">{{ activity_suggestion.activity_description }}</p>
-    <p class="card-text">Location: <a href="{{ activity_suggestion.place_url }}">{{ activity_suggestion.place }}</a></p>
+    <h5 class="card-title">{{ activity_suggestion.name }}</h5>
+    <p class="card-text">{{ activity_suggestion.description }}</p>
+    <p class="card-text">Location: <a href="{{ activity_suggestion.url }}">{{ activity_suggestion.location_string }}</a></p>
     <div>
       <i class="far fa-thumbs-up"></i>
       <i class="far fa-thumbs-down"></i>
