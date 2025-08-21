@@ -1,7 +1,7 @@
 from django.contrib.auth.forms import UserCreationForm
 from django.forms import EmailField, CharField, DateField
 from django.forms import ModelForm ,TextInput, PasswordInput, DateInput, EmailInput, Select
-from .models import CustomUser, STATES, Trip
+from .models import CustomUser, STATES, Trip, UserEnteredActivity
 from django import forms
 from django.contrib.auth import *
 import datetime
@@ -79,3 +79,9 @@ class TripCreationForm(ModelForm):
         if end_date < start_date:
             raise forms.ValidationError('End date must be after start date')
         return end_date
+
+
+class UserCreatedActivityForm(ModelForm):
+    class Meta:
+        model = UserEnteredActivity
+        fields = ('activity_name',)

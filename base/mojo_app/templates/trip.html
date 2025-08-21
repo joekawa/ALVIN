@@ -12,17 +12,18 @@
                 <h2>Activities</h2>
                 <ul>
                     {% for activity in activities %}
-                        <li>{{ activity.name }}</li>
+                        <li>{{ activity.activity_name }}</li>
                     {% empty %}
                         <p>No activities added yet.</p>
                     {% endfor %}
                 </ul>
-                <form method="post" action="{% url 'mojo:add_activity' trip.id %}">
+                <form method="post" action="{% url 'mojo:add_activity' trip_id=trip.uuid %}">
                   {% csrf_token %}
                   <input type="text" name="activity_name" placeholder="Add activity">
                   <button type="submit" class="btn btn-primary">Add Activity</button>
               </form>
-              <form method ="post" action="{% url 'mojo:generate_itinerary' trip.id %}">
+              <form method ="post" action="{% url 'mojo:generate_itinerary'
+              trip_id=trip.uuid %}">
                 {% csrf_token %}
                 <button id="generate-itinerary-btn">Generate Itinerary</button>
               </form>

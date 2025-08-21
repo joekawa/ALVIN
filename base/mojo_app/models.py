@@ -167,7 +167,7 @@ class Trip(models.Model):
         Example:
             "Trip to Disneyland (john)"
         """
-        return f"{self.name}"
+        return f"{self.trip_name}"
 
 
 
@@ -212,8 +212,9 @@ class ModelTripActivity(models.Model):
     name = models.CharField(max_length=255)
     activity_type = models.CharField(max_length=100, blank=True)
     description = models.TextField(blank=True)
-    location_string = models.CharField(max_length=255, help_text="Raw GPT-provided location string")
-    address = models.CharField(max_length=255, blank=True)
+    location_string = models.CharField(max_length=255,
+                                       help_text="Raw GPT-provided location string")
+    address = models.CharField(max_length=255, blank=True, null=True)
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
     source = models.CharField(max_length=50, default="chatgpt")  # or user_input, api, etc.

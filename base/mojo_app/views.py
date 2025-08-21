@@ -8,6 +8,7 @@ from django.core.serializers import serialize
 from openai import OpenAI
 from pydantic import BaseModel
 import json
+from django.shortcuts import get_object_or_404
 from typing import List
 
 # Create your views here.
@@ -19,6 +20,9 @@ def index(request):
     created by the currently logged in user.
     """
     trips = Trip.objects.filter(created_by=request.user)
+    for t in trips:
+      print(1)
+      print(t.uuid)
     return render(request, 'index.html', {'user': request.user, 'trips': trips})
 
 
@@ -69,13 +73,6 @@ def profile(request):
   return render(request, 'profile.html')
 
 
-def create_trip(request):
-  """
-  Renders the page for creating a new trip.
-  """
-  return render(request, 'create_trip.html')
-
-
 
 def create_trip(request):
     """
@@ -103,9 +100,9 @@ def create_trip(request):
 
 @login_required(login_url='mojo:login')
 def trip(request, trip_id):
-    trip = Trip.objects.get(id=trip_id)
-    activities = trip.activity_set.all()
-    model_suggestions = ModelSuggestions.objects.filter(trip=trip)
+    trip = get_object_or_404(Trip, uuid=trip_id)
+    activities = trip.userenteredactivity_set.all()
+    model_suggestions = ModelTripActivity.objects.filter(trip=trip)
     return render(request, 'trip.html', {'trip': trip,
                                          'activities': activities,
                                          'model_suggestions': model_suggestions})
@@ -119,10 +116,12 @@ def add_activity(request, trip_id):
     Redirects back to the trip details page after adding the activity.
     """
 
-    trip = Trip.objects.get(id=trip_id)
+    trip = Trip.objects.get(uuid=trip_id)
     if request.method == 'POST':
         activity_name = request.POST.get('activity_name')
-        activity = Activity(name=activity_name, trip=trip)
+        activity = UserEnteredActivity(activity_name=activity_name,
+                                       trip=trip,
+                                       created_by=request.user)
         activity.save()
     return redirect('mojo:trip', trip_id)
 
