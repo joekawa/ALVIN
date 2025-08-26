@@ -23,3 +23,8 @@ html {
 .card-body {
   flex: 1; /* make the card body take up the rest of the space */
 }
+
+.user-feedback {
+  align-self: end;
+  margin-top: 1rem;
+}

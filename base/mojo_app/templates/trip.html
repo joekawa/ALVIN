@@ -30,16 +30,21 @@
               <p id="itinerary"></p>
               <div class="row">
                       {% for activity_suggestion in model_suggestions %}
-<div class="col-md-4 mb-3">
+<div class="col-md-4 mb-4">
                       <div class="card">
-  <div class="card-body">
+  <div class="card-body d-flex flex-column">
     <h5 class="card-title">{{ activity_suggestion.name }}</h5>
+    <h6 class="card-subtitle mb-2 text-muted"><a href="{{ activity_suggestion.url }}"
+        target="_blank">{{ activity_suggestion.location_string }}</a></h6>
     <p class="card-text">{{ activity_suggestion.description }}</p>
-    <p class="card-text">Location: <a href="{{ activity_suggestion.url }}">{{ activity_suggestion.location_string }}</a></p>
-    <div>
-      <i class="far fa-thumbs-up"></i>
-      <i class="far fa-thumbs-down"></i>
-  </div>
+    <div class="user-feedback mt-auto">
+     <a href="{% url 'mojo:heart_model_suggestion' model_trip_activity_id=activity_suggestion.id %}" class="mr-2">
+        <i class="fas fa-heart"></i>
+      </a>
+      <a href="#" class="mr-2">
+        <i class="fas fa-times"></i>
+      </a>
+    </div>
 </div>
 </div>
 </div>

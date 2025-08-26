@@ -10,14 +10,18 @@
                 <p>We're glad you're here. Here's a quick overview of your upcoming trips:</p>
                 <div class="row">
                     {% for trip in trips %}
-                        <div class="col-md-4">
+                        <div class="col-md-4 mb-4">
                             <div class="card">
                                 <div class="card-body" style="height: 300px; display: flex; flex-direction: column; justify-content: space-between;">
                                     <h2>{{ trip.trip_name }}</h2>
                                     <p>Destination: {{ trip.destination }}</p>
                                     <p>Start Date: {{ trip.start_date }}</p>
                                     <p>End Date: {{ trip.end_date }}</p>
-                                   <a href="{% url 'mojo:trip' trip_id=trip.uuid %}" class="btn btn-primary">View Details</a>
+
+                                    <div class="user-share mt-auto">
+                                   <a href="{% url 'mojo:trip' trip_id=trip.uuid %}" class="btn btn-primary mr-4">View Details</a>
+                                   <i class="fas fa-share-square align-self-end"></i>
+                                  </div>
                                 </div>
                             </div>
                         </div>

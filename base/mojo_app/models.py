@@ -233,17 +233,16 @@ class ModelTripActivity(models.Model):
 #* THIS IS HOW THE USER REACTED TO THE MODEL SUGGESTION
 class TripActivityDetails(models.Model):
     STATUS_CHOICES = [
-        ("wishlist", "Wishlist"),
         ("saved", "Saved"),
-        ("visited", "Visited"),
         ("rejected", "Rejected"),
+        ('blank', 'Blank'), #indicates no response
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name="trip_locations")
     place = models.ForeignKey(ModelTripActivity, on_delete=models.CASCADE, related_name="trip_locations")
     notes = models.TextField(blank=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="wishlist")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="blank")
     created_at = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
 
@@ -252,4 +251,4 @@ class TripActivityDetails(models.Model):
         unique_together = ("trip", "place")  # prevents duplicates
 
     def __str__(self):
-        return f"{self.location.name} for {self.trip.name}"
+        return f"{self.place.name} for {self.trip.trip_name}"

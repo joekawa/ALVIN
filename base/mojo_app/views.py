@@ -179,3 +179,13 @@ def generate_itinerary(request, trip_id):
 
   return redirect('mojo:trip', trip_id)
 
+
+def heart_model_suggestion(request, model_trip_activity_id):
+  model_trip_activity = ModelTripActivity.objects.get(id=model_trip_activity_id)
+  TripActivityDetails.objects.create(
+    trip=model_trip_activity.trip,
+    place=model_trip_activity,
+    user=request.user,
+    status="saved")
+
+  return redirect('mojo:trip', trip_id=model_trip_activity.trip.uuid)
