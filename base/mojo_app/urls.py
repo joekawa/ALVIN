@@ -17,5 +17,6 @@ urlpatterns = [
   path('trip/<uuid:trip_id>/add_activity/', views.add_activity, name='add_activity'),
   path('trip/<uuid:trip_id>/trip_details/', views.generate_itinerary, name='generate_itinerary'),
   path('trip/<uuid:model_trip_activity_id>/heart/', views.heart_model_suggestion, name='heart_model_suggestion'),
+  path('trip/<uuid:model_trip_activity_id>/reject/', views.reject_model_suggestion, name='reject_model_suggestion'),
 ]
 

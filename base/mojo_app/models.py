@@ -239,7 +239,7 @@ class TripActivityDetails(models.Model):
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name="trip_locations")
+    trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name="trip")
     place = models.ForeignKey(ModelTripActivity, on_delete=models.CASCADE, related_name="trip_locations")
     notes = models.TextField(blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="blank")

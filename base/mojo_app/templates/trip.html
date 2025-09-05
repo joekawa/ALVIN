@@ -17,15 +17,21 @@
                         <p>No activities added yet.</p>
                     {% endfor %}
                 </ul>
-                <form method="post" action="{% url 'mojo:add_activity' trip_id=trip.uuid %}">
+                <div class="row">
+                    <div class="col-md-8 mb-4">
+                <form class = "input-group" method="post" action="{% url 'mojo:add_activity' trip_id=trip.uuid %}">
                   {% csrf_token %}
-                  <input type="text" name="activity_name" placeholder="Add activity">
-                  <button type="submit" class="btn btn-primary">Add Activity</button>
-              </form>
+                  <input type="text" name="activity_name" class='form-control' placeholder="Add activity">
+                  <button type="submit" class="btn btn-primary ml-2">Add Activity</button>
+                </form>
+                </div>
+            </div>
+                <div class="row mt-3">
               <form method ="post" action="{% url 'mojo:generate_itinerary' trip_id=trip.uuid %}">
                 {% csrf_token %}
-                <button id="generate-itinerary-btn">Generate Itinerary</button>
+                <button class="btn btn-outline-dark ml-3 mb-3" id="generate-itinerary-btn btn">Generate Itinerary <span style="font-size: 20px;">&#x2727;</span></button><i class="fas fa-wand-magic"></i>
               </form>
+              </div>
               <h2>Itinerary</h2>
               <p id="itinerary"></p>
               <div class="row">
@@ -41,7 +47,7 @@
      <a href="{% url 'mojo:heart_model_suggestion' model_trip_activity_id=activity_suggestion.id %}" class="mr-2">
         <i class="fas fa-heart"></i>
       </a>
-      <a href="#" class="mr-2">
+      <a href="{% url 'mojo:reject_model_suggestion' model_trip_activity_id=activity_suggestion.id %}" class="mr-2">
         <i class="fas fa-times"></i>
       </a>
     </div>

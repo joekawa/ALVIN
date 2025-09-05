@@ -6,10 +6,12 @@ from .models import *
 from django.contrib.auth.decorators import login_required
 from django.core.serializers import serialize
 from openai import OpenAI
-from pydantic import BaseModel
 import json
 from django.shortcuts import get_object_or_404
 from typing import List
+from django.db.models import Q
+from django.shortcuts import get_object_or_404
+
 
 # Create your views here.
 
@@ -102,7 +104,7 @@ def create_trip(request):
 def trip(request, trip_id):
     trip = get_object_or_404(Trip, uuid=trip_id)
     activities = trip.userenteredactivity_set.all()
-    model_suggestions = ModelTripActivity.objects.filter(trip=trip)
+    model_suggestions = ModelTripActivity.objects.filter(trip=trip).exclude(trip_locations__status='rejected')
     return render(request, 'trip.html', {'trip': trip,
                                          'activities': activities,
                                          'model_suggestions': model_suggestions})
@@ -144,30 +146,36 @@ def generate_itinerary(request, trip_id):
       JsonResponse: A JSON response containing the generated itinerary.
   """
   trip = Trip.objects.get(uuid = trip_id)
-  activities = UserEnteredActivity.objects.filter(trip=trip)
+  activities = UserEnteredActivity.objects.filter(trip=trip).values_list('activity_name', flat=True)
   client = OpenAI()
   serialized_start_date = trip.start_date.strftime("%Y-%m-%d")
   serialized_end_date = trip.end_date.strftime("%Y-%m-%d")
-  serialized_activities = serialize('json', activities)
-
+  serialized_activities = json.dumps(list(activities))
+  rejected_model_suggestions = ModelTripActivity.objects.filter(trip=trip, trip_locations__status='rejected').values_list('location_string', flat=True)
+  saved_model_suggestions = ModelTripActivity.objects.filter(trip=trip, trip_locations__status='saved').values_list('location_string', flat=True)
+  rejected_model_suggestions_serialized = json.dumps(list(rejected_model_suggestions))
+  saved_model_suggestions_serialized = json.dumps(list(saved_model_suggestions))
 
   response = client.responses.create(
     prompt={
         "id": "pmpt_689e839191808196aee8f2537e3c63770d2c7182b27d433c",
-        "version": "3",
+        "version": "5",
         "variables": {
           "travel_destination": trip.destination,
           "trip_start_date": serialized_start_date,
           "trip_end_date": serialized_end_date,
-          "activities": serialized_activities
+          "activities": serialized_activities,
+          "saved_model_suggestions": saved_model_suggestions_serialized,
+          "rejected_model_suggestions": rejected_model_suggestions_serialized
       }
     }
 )
-
+  print(response.output[0].content[0].text)
   activities_list = json.loads(response.output[0].content[0].text)
 
 # If there are already suggestions for this trip, delete them
-  ModelTripActivity.objects.filter(trip=trip).delete()
+  ModelTripActivity.objects.filter(trip=trip).exclude(trip_locations__status__in=['rejected', 'saved']).delete()
+
   for activity in activities_list:
     ModelTripActivity.objects.create(
       trip=trip,
@@ -182,10 +190,31 @@ def generate_itinerary(request, trip_id):
 
 def heart_model_suggestion(request, model_trip_activity_id):
   model_trip_activity = ModelTripActivity.objects.get(id=model_trip_activity_id)
-  TripActivityDetails.objects.create(
-    trip=model_trip_activity.trip,
-    place=model_trip_activity,
-    user=request.user,
-    status="saved")
+  trip_activity_detail, created = TripActivityDetails.objects.get_or_create(
+      trip=model_trip_activity.trip,
+      place=model_trip_activity,
+      user=request.user,
+      defaults={'status': 'saved'}
+  )
 
+  if created:
+    print(f"Created new TripActivityDetail object for trip {model_trip_activity.trip.uuid}")
+  else:
+    print(f"TripActivityDetail object already exists for trip {model_trip_activity.trip.uuid}")
+  return redirect('mojo:trip', trip_id=model_trip_activity.trip.uuid)
+
+
+def reject_model_suggestion(request, model_trip_activity_id):
+  model_trip_activity = ModelTripActivity.objects.get(id=model_trip_activity_id)
+  trip_activity_detail, created = TripActivityDetails.objects.get_or_create(
+      trip=model_trip_activity.trip,
+      place=model_trip_activity,
+      user=request.user,
+      defaults={'status': 'rejected'}
+  )
+
+  if created:
+    print(f"Created new TripActivityDetail object for trip {model_trip_activity.trip.uuid}")
+  else:
+    print(f"TripActivityDetail object already exists for trip {model_trip_activity.trip.uuid}")
   return redirect('mojo:trip', trip_id=model_trip_activity.trip.uuid)
