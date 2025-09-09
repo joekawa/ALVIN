@@ -87,12 +87,16 @@ def create_trip(request):
     the submitted form data, associates it with the currently logged
     in user, and redirects to the index page.
     """
+
+    #* NEED TO HAVE TRIPCONTRIBUTOR OBJECT CREATED WHEN A TRIP IS CREATED
     if request.method == 'POST':
         form = TripCreationForm(request.POST)
         if form.is_valid():
             trip = form.save(commit=False)
             trip.created_by = request.user
             trip.save()
+            TripParticipant.objects.create(trip=trip, user=request.user,
+                                           role="owner")
             print("Trip created:", trip)
             return redirect('mojo:index')
     else:
@@ -218,3 +222,13 @@ def reject_model_suggestion(request, model_trip_activity_id):
   else:
     print(f"TripActivityDetail object already exists for trip {model_trip_activity.trip.uuid}")
   return redirect('mojo:trip', trip_id=model_trip_activity.trip.uuid)
+
+
+#! PROBLEM.  IF A USER SHARES A TRIP
+#! IT HAS TO BE SHARED WITH A USER.  WHAT HAPPENS WHEN A USER SHARES A TRIP
+#! WITH A NON-USER EMAIL?
+def share(request, trip_id):
+  trip = Trip.objects.get(uuid=trip_id)
+  email = request.POST.get('email')
+
+  return render(request, 'share.html', {'trip': trip})

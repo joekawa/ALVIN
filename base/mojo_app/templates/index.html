@@ -20,7 +20,32 @@
 
                                     <div class="user-share mt-auto">
                                    <a href="{% url 'mojo:trip' trip_id=trip.uuid %}" class="btn btn-primary mr-4">View Details</a>
-                                   <i class="fas fa-share-square align-self-end"></i>
+                                   <i class="fas fa-share-square align-self-end" data-toggle="modal" data-target="#shareModal"></i>
+                                   <div class="modal fade" id="shareModal" tabindex="-1" role="dialog" aria-labelledby="shareModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-sm" role="document">
+                                      <div class="modal-content">
+                                        <div class="modal-header">
+                                          <h5 class="modal-title" id="shareModalLabel">Share with a friend</h5>
+                                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                          </button>
+                                        </div>
+                                        <div class="modal-body">
+                                          <form class="input-group" method="post" action="{% url 'mojo:share_trip' trip_id=trip.uuid %}">
+                                           {% csrf_token %}
+                                            <div class="form-group">
+                                              <label for="email">Email address:</label>
+                                              <input type="email" class="form-control" id="email" placeholder="Enter email address">
+                                            </div>
+                                          </form>
+                                        </div>
+                                        <div class="modal-footer">
+                                          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                          <button type="submit" class="btn btn-primary">Share</button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
                                   </div>
                                 </div>
                             </div>

@@ -149,6 +149,7 @@ class CustomUser(AbstractBaseUser):
         """
         return self.is_admin
 
+
 class Trip(models.Model):
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     trip_name = models.CharField(max_length=255)
@@ -252,3 +253,20 @@ class TripActivityDetails(models.Model):
 
     def __str__(self):
         return f"{self.place.name} for {self.trip.trip_name}"
+
+
+#* THIS STORES A SHARED TRIP.  WHEN A USER SHARES A TRIP WITH ANOTHER EMAIL
+#* IT'S LOGGED IN SharedTrip.  IF THE EMAIL DOESN'T EXIST IN THE DB,
+#* IT'S LOGGED IN SharedTrip AND THEN WILL BE SHARED TO THE EMAIL WHEN THE USER
+#* SIGNS UP
+class SharedTrip(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    trip = models.ForeignKey(Trip, on_delete=models.CASCADE)
+    shared_with = models.EmailField()
+    shared_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("trip", "shared_with")
+
+    def __str__(self):
+        return f"{self.trip.trip_name} shared with {self.shared_with} at {self.shared_at}"
