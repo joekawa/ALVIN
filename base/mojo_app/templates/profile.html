@@ -1,4 +1,43 @@
 {% extends 'base.html' %}
-<div>
-  <p>PROFILE PAGE</p>
-</div>
+{% block content %}
+<div class='mb-3'>
+</div><!-- profile.html -->
+
+<!-- profile.html -->
+
+<!-- profile.html -->
+
+<form method="post" class="form-horizontal">
+  {% csrf_token %}
+  <div class="form-group row">
+    <label for="id_city" class="col-sm-2 control-label">City</label>
+    <div>
+    <input type="text" class="form-control col-sm-10" id="id_city" name="city" value="{{ user.city }}" required>
+    </div>
+  </div>
+  <div class="form-group row">
+    <label for="id_state" class="col-sm-2 control-label">State</label>
+    <div>
+      <input type="text" class="form-control col-sm-10" id="id_city" name="city" value="{{ user.state }}" required>
+    </div>
+  </div>
+  <div class="form-group row">
+    <label for="id_zip_code" class="col-sm-2 control-label">Zip Code</label>
+    <div>
+      <input type="text" class="form-control col-sm-10" id="id_city" name="city" value="{{ user.zip_code }}" required>
+    </div>
+  </div>
+  <div class="form-group row">
+    <label for="id_dob" class="col-sm-2 control-label">Date of Birth</label>
+    <div>
+      <input type="date" class="form-control col-sm-20" id="id_city" name="city" value="{{ user.dob }}" required>
+    </div>
+  </div>
+  <div class="form-group">
+    <div class="col-sm-offset-2 col-sm-10">
+      <button type="submit" class="btn btn-primary">Save</button>
+    </div>
+  </div>
+</form>
+
+{% endblock %}

@@ -44,6 +44,45 @@
         target="_blank">{{ activity_suggestion.location_string }}</a></h6>
     <p class="card-text">{{ activity_suggestion.description }}</p>
     <div class="user-feedback mt-auto">
+
+        <button class="btn btn-light mr-2"><i class="far fa-comments" data-toggle="modal" data-target="#comments-modal" ></i></button>
+        <!-- The modal itself -->
+<div class="modal" id="comments-modal" tabindex="-1" role="dialog" aria-labelledby="comments-modal-label" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="comments-modal-label">Comments</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <!-- The comments will be displayed here -->
+          {% if activity_suggestion.tripactivitycomment_set.all %}
+          <ul id="comments-list">
+            {% for comment in activity_suggestion.tripactivitycomment_set.all %}
+            <li>
+             <strong>{{ comment.created_by }}</strong>:  {{ comment.comment }}
+            </li>
+            {% endfor %}
+
+          </ul>
+          {% else %}
+          <p>No comments yet.</p>
+          {% endif %}
+
+          <!-- The form to add a new comment -->
+          <form id="add-comment-form" action="{% url 'mojo:add_comment' trip_activity_id=activity_suggestion.id %}" method="post">
+            {% csrf_token %}
+            <textarea id="comment-text" name="comment" style="width: 100%; height: 100px;" placeholder="Add a comment..."></textarea>
+        </div>
+        <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">Add Comment</button>
+          </form>
+</div>
+      </div>
+    </div>
+  </div>
      <a href="{% url 'mojo:heart_model_suggestion' model_trip_activity_id=activity_suggestion.id %}" class="mr-2">
         <i class="fas fa-heart"></i>
       </a>

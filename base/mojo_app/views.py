@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, JsonResponse
 from django.contrib.auth import login, logout
-from .forms import CustomUserCreationForm, TripCreationForm
+from .forms import CustomUserCreationForm, TripCreationForm, ProfileForm
 from .models import *
 from django.contrib.auth.decorators import login_required
 from django.core.serializers import serialize
@@ -15,6 +15,8 @@ from django.shortcuts import get_object_or_404
 
 # Create your views here.
 
+#* I NEED TO UPDATE THIS TO CHECK FOR ALL TRIPS THE USER HAS CREATED
+#* OR IS A PARTICIPANT OF
 @login_required(login_url='mojo:login')
 def index(request):
     """
@@ -72,7 +74,16 @@ def profile(request):
   """
   Renders the user's profile page.
   """
-  return render(request, 'profile.html')
+  print('profile view')
+
+  if request.method == 'POST':
+      form = ProfileForm(request.POST, instance=request.user)
+      if form.is_valid():
+          form.save()
+          return render(request, 'profile.html', {'form': form})
+  else:
+      form = ProfileForm(instance=request.user)
+  return render(request, 'profile.html', {'form': form})
 
 
 
@@ -109,9 +120,14 @@ def trip(request, trip_id):
     trip = get_object_or_404(Trip, uuid=trip_id)
     activities = trip.userenteredactivity_set.all()
     model_suggestions = ModelTripActivity.objects.filter(trip=trip).exclude(trip_locations__status='rejected')
+    activity_comments = {}
+    for activity in model_suggestions:
+        comments = TripActivityComment.objects.filter(trip_activity=activity)
+        activity_comments[activity.id] = comments
     return render(request, 'trip.html', {'trip': trip,
                                          'activities': activities,
-                                         'model_suggestions': model_suggestions})
+                                         'model_suggestions': model_suggestions,
+                                         'activity_comments': activity_comments})
 
 
 @login_required(login_url='mojo:login')
@@ -227,8 +243,28 @@ def reject_model_suggestion(request, model_trip_activity_id):
 #! PROBLEM.  IF A USER SHARES A TRIP
 #! IT HAS TO BE SHARED WITH A USER.  WHAT HAPPENS WHEN A USER SHARES A TRIP
 #! WITH A NON-USER EMAIL?
-def share(request, trip_id):
+def share_trip(request, trip_id):
   trip = Trip.objects.get(uuid=trip_id)
   email = request.POST.get('email')
+  try:
+    user = CustomUser.objects.get(email=email)
+  except CustomUser.DoesNotExist:
+    shared_trip, created = SharedTrip.objects.get_or_create(
+        trip=trip,
+        shared_with=email,
+    )
+    if created:
+      print(f"Created new SharedTrip object for trip {trip.uuid}")
+    else:
+      print(f"SharedTrip object already exists for trip {trip.uuid}")
 
-  return render(request, 'share.html', {'trip': trip})
+
+  return redirect('mojo:index')
+
+
+def add_comment(request, trip_activity_id):
+  trip_activity = ModelTripActivity.objects.get(id=trip_activity_id)
+  add_comment = request.POST.get('comment')
+  TripActivityComment.objects.create(trip_activity=trip_activity,
+                                     comment=add_comment, created_by=request.user)
+  return redirect('mojo:trip', trip_id=trip_activity.trip.uuid)

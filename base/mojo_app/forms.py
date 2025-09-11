@@ -85,3 +85,9 @@ class UserCreatedActivityForm(ModelForm):
     class Meta:
         model = UserEnteredActivity
         fields = ('activity_name',)
+
+
+class ProfileForm(ModelForm):
+    class Meta:
+        model = CustomUser
+        fields = ('city', 'state', 'zip_code', 'dob')

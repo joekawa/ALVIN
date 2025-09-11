@@ -255,6 +255,17 @@ class TripActivityDetails(models.Model):
         return f"{self.place.name} for {self.trip.trip_name}"
 
 
+class TripActivityComment(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    trip_activity = models.ForeignKey(ModelTripActivity, on_delete=models.CASCADE)
+    comment = models.TextField()
+    created_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.created_by.username}: {self.comment}"
+
+
 #* THIS STORES A SHARED TRIP.  WHEN A USER SHARES A TRIP WITH ANOTHER EMAIL
 #* IT'S LOGGED IN SharedTrip.  IF THE EMAIL DOESN'T EXIST IN THE DB,
 #* IT'S LOGGED IN SharedTrip AND THEN WILL BE SHARED TO THE EMAIL WHEN THE USER
