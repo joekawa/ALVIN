@@ -24,9 +24,9 @@ def index(request):
     created by the currently logged in user.
     """
     trips = Trip.objects.filter(created_by=request.user)
-    for t in trips:
-      print(1)
-      print(t.uuid)
+    trips_shared = Trip.objects.filter(tripparticipant__user=request.user)
+    trips = trips | trips_shared
+
     return render(request, 'index.html', {'user': request.user, 'trips': trips})
 
 
@@ -61,6 +61,10 @@ def signup(request):
     if form.is_valid():
       print("form is valid")
       user = form.save()
+      shared_trip = SharedTrip.objects.get(shared_with=user.email)
+      trip_participant = TripParticipant.objects.create(trip=shared_trip.trip,
+                                                       user=user,
+                                                       role="contributor")
       login(request, user)
       return redirect('mojo:index')
     else:
@@ -248,6 +252,12 @@ def share_trip(request, trip_id):
   email = request.POST.get('email')
   try:
     user = CustomUser.objects.get(email=email)
+    trip_participant, created = TripParticipant.objects.get_or_create(
+      trip=trip,
+      user=user,
+      role="contributor"
+    )
+
   except CustomUser.DoesNotExist:
     shared_trip, created = SharedTrip.objects.get_or_create(
         trip=trip,
