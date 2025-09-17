@@ -51,7 +51,8 @@ class TripCreationForm(ModelForm):
     destination = CharField(label="Destination",max_length=30, required=True,
                                widget=TextInput(
                                      attrs={'class': "form-control",
-                                            'placeholder': "Enter Destination"}))
+                                            'placeholder': "Enter Destination",
+                                            'id': "destination-input"}))
     start_date = DateField(label="Start Date",required=True,
                                widget=DateInput(
                                      attrs={'class': "form-control",
