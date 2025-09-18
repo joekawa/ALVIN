@@ -47,7 +47,8 @@ class TripCreationForm(ModelForm):
     trip_name = CharField(label="Trip Name",max_length=30, required=True,
                                widget=TextInput(
                                      attrs={'class': "form-control",
-                                            'placeholder': "Trip Name"}))
+                                            'placeholder': "Trip Name",
+                                            'name': "trip_name"}))
     destination = CharField(label="Destination",max_length=30, required=True,
                                widget=TextInput(
                                      attrs={'class': "form-control",
@@ -56,12 +57,14 @@ class TripCreationForm(ModelForm):
     start_date = DateField(label="Start Date",required=True,
                                widget=DateInput(
                                      attrs={'class': "form-control",
-                                            'type': "date"}))
+                                            'type': "date",
+                                            'name': "start_date"}))
     end_date = DateField(label="End Date", required=True,
                                widget=DateInput(
                                      attrs={'class': "form-control",
                                             'placeholder': "Enter End Date",
-                                            'type': "date"}))
+                                            'type': "date",
+                                            'name': "end_date"}))
 
 
     class Meta:

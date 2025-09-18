@@ -153,7 +153,8 @@ class CustomUser(AbstractBaseUser):
 class Trip(models.Model):
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     trip_name = models.CharField(max_length=255)
-    destination = models.CharField(max_length=255)
+    destination_city = models.CharField(max_length=255)
+    destination_state = models.CharField(max_length=255, default="NA")
     start_date = models.DateField()
     end_date = models.DateField()
     created_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE)

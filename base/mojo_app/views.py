@@ -11,6 +11,7 @@ from django.shortcuts import get_object_or_404
 from typing import List
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+import re
 
 
 # Create your views here.
@@ -23,9 +24,8 @@ def index(request):
     Renders the index page, which contains a list of trips
     created by the currently logged in user.
     """
-    trips = Trip.objects.filter(created_by=request.user)
-    trips_shared = Trip.objects.filter(tripparticipant__user=request.user)
-    trips = trips | trips_shared
+    trips = Trip.objects.filter(tripparticipant__user=request.user)
+#    trips_shared = Trip.objects.filter(tripparticipant__user=request.user)
 
     return render(request, 'index.html', {'user': request.user, 'trips': trips})
 
@@ -72,7 +72,7 @@ def signup(request):
   form = CustomUserCreationForm()
   return render(request, 'signup.html', {'form': form})
 
-
+@login_required(login_url='mojo:login')
 def profile(request):
 
   """
@@ -90,7 +90,7 @@ def profile(request):
   return render(request, 'profile.html', {'form': form})
 
 
-
+@login_required(login_url='mojo:login')
 def create_trip(request):
     """
     Handles GET and POST requests for creating a new trip.
@@ -102,20 +102,42 @@ def create_trip(request):
     the submitted form data, associates it with the currently logged
     in user, and redirects to the index page.
     """
-
+    form = TripCreationForm()
     #* NEED TO HAVE TRIPCONTRIBUTOR OBJECT CREATED WHEN A TRIP IS CREATED
     if request.method == 'POST':
-        form = TripCreationForm(request.POST)
-        if form.is_valid():
-            trip = form.save(commit=False)
-            trip.created_by = request.user
-            trip.save()
-            TripParticipant.objects.create(trip=trip, user=request.user,
-                                           role="owner")
-            print("Trip created:", trip)
-            return redirect('mojo:index')
-    else:
-        form = TripCreationForm()
+        destination = request.POST.get('destination') #* AUTOCOMPLETE VALUE IN FORM
+        trip_name = request.POST.get('trip_name')
+        start_date = request.POST.get('start_date')
+        end_date = request.POST.get('end_date')
+        pattern = re.compile(r'(?P<city>.+?),\s+(?P<state>\w+),\s+(?P<country>.+)')
+        match = pattern.match(destination)
+        if match:
+          city = match.group('city')
+          state = match.group('state')
+          country = match.group('country')
+        else:
+          city = None
+          state = None
+          country = None
+        trip = Trip.objects.create(trip_name=trip_name, start_date=start_date,
+                                   end_date=end_date,  destination_city=city,
+                                   destination_state=state,
+                                   created_by=request.user)
+        trip.save()
+        trip_participant = TripParticipant.objects.create(trip=trip,
+                                                          user=request.user,
+                                                          role="owner")
+        trip_participant.save()
+        #if form.is_valid():
+         #   trip = form.save(commit=False)
+          #  trip.created_by = request.user
+           # trip.save()
+            #TripParticipant.objects.create(trip=trip, user=request.user,
+             #                              role="owner")
+            #print("Trip created:", trip)
+           # return redirect('mojo:index')
+    #else:
+       # form = TripCreationForm()
     return render(request, 'create_trip.html', {'form': form})
 
 
@@ -185,7 +207,7 @@ def generate_itinerary(request, trip_id):
         "id": "pmpt_689e839191808196aee8f2537e3c63770d2c7182b27d433c",
         "version": "5",
         "variables": {
-          "travel_destination": trip.destination,
+          "travel_destination": trip.destination_city,
           "trip_start_date": serialized_start_date,
           "trip_end_date": serialized_end_date,
           "activities": serialized_activities,
@@ -211,7 +233,7 @@ def generate_itinerary(request, trip_id):
 
   return redirect('mojo:trip', trip_id)
 
-
+@login_required(login_url='mojo:login')
 def heart_model_suggestion(request, model_trip_activity_id):
   model_trip_activity = ModelTripActivity.objects.get(id=model_trip_activity_id)
   trip_activity_detail, created = TripActivityDetails.objects.get_or_create(
@@ -227,7 +249,7 @@ def heart_model_suggestion(request, model_trip_activity_id):
     print(f"TripActivityDetail object already exists for trip {model_trip_activity.trip.uuid}")
   return redirect('mojo:trip', trip_id=model_trip_activity.trip.uuid)
 
-
+@login_required(login_url='mojo:login')
 def reject_model_suggestion(request, model_trip_activity_id):
   model_trip_activity = ModelTripActivity.objects.get(id=model_trip_activity_id)
   trip_activity_detail, created = TripActivityDetails.objects.get_or_create(
@@ -247,6 +269,7 @@ def reject_model_suggestion(request, model_trip_activity_id):
 #! PROBLEM.  IF A USER SHARES A TRIP
 #! IT HAS TO BE SHARED WITH A USER.  WHAT HAPPENS WHEN A USER SHARES A TRIP
 #! WITH A NON-USER EMAIL?
+@login_required(login_url='mojo:login')
 def share_trip(request, trip_id):
   trip = Trip.objects.get(uuid=trip_id)
   email = request.POST.get('email')
@@ -271,7 +294,7 @@ def share_trip(request, trip_id):
 
   return redirect('mojo:index')
 
-
+@login_required(login_url='mojo:login')
 def add_comment(request, trip_activity_id):
   trip_activity = ModelTripActivity.objects.get(id=trip_activity_id)
   add_comment = request.POST.get('comment')

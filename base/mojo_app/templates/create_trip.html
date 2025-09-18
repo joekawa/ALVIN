@@ -41,6 +41,7 @@ function addressAutocomplete(containerElement, callback, options) {
   inputElement.setAttribute("type", "text");
   inputElement.setAttribute("placeholder", options.placeholder);
   inputElement.setAttribute("id", "city-autocomplete")
+  inputElement.setAttribute("name", "destination")
   containerElement.appendChild(inputElement);
 
   // add input field clear button
@@ -92,7 +93,7 @@ function addressAutocomplete(containerElement, callback, options) {
       currentPromiseReject = reject;
 
       var apiKey = "0cd87d10e36f4dd3a98fda85256657b2";
-      var url = `https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(currentValue)}&limit=5&apiKey=${apiKey}`;
+      var url = `https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(currentValue)}&type=city&filter=countrycode:us&limit=5&apiKey=${apiKey}`;
 
       if (options.type) {
       	url += `&type=${options.type}`;
