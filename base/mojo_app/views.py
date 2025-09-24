@@ -143,6 +143,7 @@ def create_trip(request):
 
 @login_required(login_url='mojo:login')
 def trip(request, trip_id):
+
     trip = get_object_or_404(Trip, uuid=trip_id)
     activities = trip.userenteredactivity_set.all()
     model_suggestions = ModelTripActivity.objects.filter(trip=trip).exclude(trip_locations__status='rejected')
@@ -150,10 +151,12 @@ def trip(request, trip_id):
     for activity in model_suggestions:
         comments = TripActivityComment.objects.filter(trip_activity=activity)
         activity_comments[activity.id] = comments
+    participant = TripParticipant.objects.filter(trip=trip)
     return render(request, 'trip.html', {'trip': trip,
                                          'activities': activities,
                                          'model_suggestions': model_suggestions,
-                                         'activity_comments': activity_comments})
+                                         'activity_comments': activity_comments,
+                                         'participant': participant})
 
 
 @login_required(login_url='mojo:login')
@@ -271,6 +274,23 @@ def reject_model_suggestion(request, model_trip_activity_id):
 #! WITH A NON-USER EMAIL?
 @login_required(login_url='mojo:login')
 def share_trip(request, trip_id):
+  """
+  Share a trip with another user.
+
+  This function takes a POST request containing the email address of the user
+  to share the trip with. If the user exists, it creates a new TripParticipant
+  object, otherwise it creates a new SharedTrip object. After successful creation,
+  it redirects the user back to the index page.
+
+  Parameters:
+  request (HttpRequest): The POST request containing the email address of the user to share the trip with.
+  trip_id (str): The UUID of the trip to share.
+
+  Returns:
+  HttpResponse: A redirect to the index page.
+
+  """
+
   trip = Trip.objects.get(uuid=trip_id)
   email = request.POST.get('email')
   try:
@@ -301,3 +321,10 @@ def add_comment(request, trip_activity_id):
   TripActivityComment.objects.create(trip_activity=trip_activity,
                                      comment=add_comment, created_by=request.user)
   return redirect('mojo:trip', trip_id=trip_activity.trip.uuid)
+
+
+def delete_user_entered_activity(request, user_generated_trip_activity_id):
+  user_entered_trip_activity = UserEnteredActivity.objects.get(id=user_generated_trip_activity_id)
+  generated_trip_activity = user_entered_trip_activity.trip
+  user_entered_trip_activity.delete()
+  return redirect('mojo:trip', trip_id=generated_trip_activity.uuid)

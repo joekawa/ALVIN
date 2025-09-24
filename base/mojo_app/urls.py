@@ -20,5 +20,6 @@ urlpatterns = [
   path('trip/<uuid:model_trip_activity_id>/reject/', views.reject_model_suggestion, name='reject_model_suggestion'),
   path('trip/<uuid:trip_id>/share_trip/', views.share_trip, name='share_trip'),
   path('trip/<uuid:trip_activity_id>/add_comment/', views.add_comment, name='add_comment'),
+  path('trip/<user_generated_trip_activity_id>/delete_activity/', views.delete_user_entered_activity, name='delete_user_entered_activity'),
 ]
 
