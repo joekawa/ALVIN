@@ -1,16 +1,12 @@
 from django.shortcuts import render, redirect
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse
 from django.contrib.auth import login, logout
 from .forms import CustomUserCreationForm, TripCreationForm, ProfileForm
 from .models import *
 from django.contrib.auth.decorators import login_required
-from django.core.serializers import serialize
+from django.shortcuts import get_object_or_404
 from openai import OpenAI
 import json
-from django.shortcuts import get_object_or_404
-from typing import List
-from django.db.models import Q
-from django.shortcuts import get_object_or_404
 import re
 
 
@@ -147,6 +143,24 @@ def trip(request, trip_id):
     trip = get_object_or_404(Trip, uuid=trip_id)
     activities = trip.userenteredactivity_set.all()
     model_suggestions = ModelTripActivity.objects.filter(trip=trip).exclude(trip_locations__status='rejected')
+    # Determine which model suggestions are saved by the current user
+    saved_place_ids = list(
+        TripActivityDetails.objects.filter(
+            trip=trip,
+            user=request.user,
+            status='saved'
+        ).values_list('place_id', flat=True)
+    )
+    # Determine which suggestions the user has responded to (any status)
+    responded_place_ids = list(
+        TripActivityDetails.objects.filter(
+            trip=trip,
+            user=request.user,
+        ).values_list('place_id', flat=True)
+    )
+    # Compute which suggestions have no status from the current user
+    suggestion_ids = list(model_suggestions.values_list('id', flat=True))
+    no_status_place_ids = [sid for sid in suggestion_ids if sid not in responded_place_ids]
     activity_comments = {}
     for activity in model_suggestions:
         comments = TripActivityComment.objects.filter(trip_activity=activity)
@@ -156,7 +170,9 @@ def trip(request, trip_id):
                                          'activities': activities,
                                          'model_suggestions': model_suggestions,
                                          'activity_comments': activity_comments,
-                                         'participant': participant})
+                                         'participant': participant,
+                                         'saved_place_ids': saved_place_ids,
+                                         'no_status_place_ids': no_status_place_ids})
 
 
 @login_required(login_url='mojo:login')
@@ -239,17 +255,30 @@ def generate_itinerary(request, trip_id):
 @login_required(login_url='mojo:login')
 def heart_model_suggestion(request, model_trip_activity_id):
   model_trip_activity = ModelTripActivity.objects.get(id=model_trip_activity_id)
-  trip_activity_detail, created = TripActivityDetails.objects.get_or_create(
+  # Check if a TripActivityDetails exists for this user/trip/place
+  trip_activity_detail = TripActivityDetails.objects.filter(
       trip=model_trip_activity.trip,
       place=model_trip_activity,
       user=request.user,
-      defaults={'status': 'saved'}
-  )
+  ).first()
 
-  if created:
-    print(f"Created new TripActivityDetail object for trip {model_trip_activity.trip.uuid}")
+  if trip_activity_detail is None:
+    # None exists: create with 'saved'
+    TripActivityDetails.objects.create(
+        trip=model_trip_activity.trip,
+        place=model_trip_activity,
+        user=request.user,
+        status='saved'
+    )
+    print(f"Created new TripActivityDetail object (saved) for trip {model_trip_activity.trip.uuid}")
+  elif getattr(trip_activity_detail, 'status', None) == 'rejected':
+    # Exists but was rejected: update to 'saved'
+    trip_activity_detail.status = 'saved'
+    trip_activity_detail.save(update_fields=['status'])
+    print(f"Updated TripActivityDetail status to 'saved' for trip {model_trip_activity.trip.uuid}")
   else:
-    print(f"TripActivityDetail object already exists for trip {model_trip_activity.trip.uuid}")
+    # Exists and not rejected (likely already saved) -> no-op
+    print(f"TripActivityDetail already exists with status '{trip_activity_detail.status}' for trip {model_trip_activity.trip.uuid}")
   return redirect('mojo:trip', trip_id=model_trip_activity.trip.uuid)
 
 @login_required(login_url='mojo:login')
@@ -328,3 +357,7 @@ def delete_user_entered_activity(request, user_generated_trip_activity_id):
   generated_trip_activity = user_entered_trip_activity.trip
   user_entered_trip_activity.delete()
   return redirect('mojo:trip', trip_id=generated_trip_activity.uuid)
+
+
+def welcome(request):
+  return render(request, 'welcome.html')
