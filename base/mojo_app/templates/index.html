@@ -3,61 +3,80 @@
 {% load static %}
 
 {% block content %}
-    <div class="container">
+    <div class="container py-4">
         <div class="row justify-content-center">
-            <div class="col-md-8 col-sm-12 col-xs-12">
-                <h1>Welcome, {{ user.email }}!</h1>
-                <p>We're glad you're here. Here's a quick overview of your upcoming trips:</p>
+            <div class="col-lg-10">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h1 class="h3 mb-1">Welcome, {{ user.email }}!</h1>
+                        <p class="text-muted mb-0">Here are your upcoming trips.</p>
+                    </div>
+                    <a href="{% url 'mojo:create_trip' %}" class="btn btn-primary">Create a Trip</a>
+                </div>
+
                 <div class="row">
                     {% for trip in trips %}
-                        <div class="col-md-4 mb-4">
-                            <div class="card">
-                                <div class="card-body" style="height: 300px; display: flex; flex-direction: column; justify-content: space-between;">
-                                    <h2>{{ trip.trip_name }}</h2>
-                                    <p>Destination: {{ trip.destination }}</p>
-                                    <p>Start Date: {{ trip.start_date }}</p>
-                                    <p>End Date: {{ trip.end_date }}</p>
+                        <div class="col-sm-6 col-lg-4 mb-4">
+                            <div class="card h-100 shadow-sm border-0">
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title mb-1">{{ trip.trip_name }}</h5>
+                                    <p class="card-subtitle text-muted mb-3">
+                                        <i class="fas fa-map-marker-alt text-danger mr-1"></i>
+                                        {{ trip.destination_city }}{% if trip.destination_state and trip.destination_state != 'NA' %}, {{ trip.destination_state }}{% endif %}
+                                    </p>
+                                    <p class="mb-1"><i class="far fa-calendar-alt mr-1"></i> {{ trip.start_date }}</p>
+                                    <p class="text-muted"><i class="far fa-calendar-check mr-1"></i> {{ trip.end_date }}</p>
 
-                                    <div class="user-share mt-auto">
-                                   <a href="{% url 'mojo:trip' trip_id=trip.uuid %}" class="btn btn-primary mr-4">View Details</a>
-                                   <i class="fas fa-share-square align-self-end" data-toggle="modal" data-target="#shareModal"></i>
-                                   <div class="modal fade" id="shareModal" tabindex="-1" role="dialog" aria-labelledby="shareModalLabel" aria-hidden="true">
-                                    <div class="modal-dialog modal-sm" role="document">
-                                      <div class="modal-content">
-                                        <div class="modal-header">
-                                          <h5 class="modal-title" id="shareModalLabel">Share with a friend</h5>
-                                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                            <span aria-hidden="true">&times;</span>
-                                          </button>
-                                        </div>
-                                        <div class="modal-body">
-                                          <form class="input-group" method="post" action="{% url 'mojo:share_trip' trip_id=trip.uuid %}">
-                                           {% csrf_token %}
-                                            <div class="form-group">
-                                              <label for="email">Email address:</label>
-                                              <input type="email" class="form-control" id="email" name="email" placeholder="Enter email address">
+                                    <div class="mt-auto d-flex justify-content-between align-items-center">
+                                        <a href="{% url 'mojo:trip' trip_id=trip.uuid %}" class="btn btn-outline-primary btn-sm">View details</a>
+
+                                        {% with modal_id='shareModal-'|add:forloop.counter|stringformat:"s" %}
+                                        <button type="button" class="btn btn-light btn-sm" data-toggle="modal" data-target="#{{ modal_id }}">
+                                            <i class="fas fa-share-alt mr-1"></i>Share
+                                        </button>
+                                        <!-- Share Modal -->
+                                        <div class="modal fade" id="{{ modal_id }}" tabindex="-1" role="dialog" aria-labelledby="{{ modal_id }}Label" aria-hidden="true">
+                                            <div class="modal-dialog modal-sm" role="document">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="{{ modal_id }}Label">Share with a friend</h5>
+                                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                            <span aria-hidden="true">&times;</span>
+                                                        </button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <form method="post" action="{% url 'mojo:share_trip' trip_id=trip.uuid %}">
+                                                            {% csrf_token %}
+                                                            <div class="form-group">
+                                                                <label for="email-{{ forloop.counter }}">Email address</label>
+                                                                <input type="email" class="form-control" id="email-{{ forloop.counter }}" name="email" placeholder="friend@example.com" required>
+                                                            </div>
+                                                            <div class="d-flex justify-content-end">
+                                                                <button type="button" class="btn btn-secondary mr-2" data-dismiss="modal">Close</button>
+                                                                <button type="submit" class="btn btn-primary">Share</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                                <button type="submit" class="btn btn-primary">Share</button>
-                                              </div>
-                                          </form>
                                         </div>
-
-                                      </div>
+                                        {% endwith %}
                                     </div>
-                                  </div>
-                                  </div>
                                 </div>
                             </div>
                         </div>
                     {% empty %}
-                        <p>No upcoming trips planned. Why not create a new one?</p>
+                        <div class="col-12">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-body text-center py-5">
+                                    <h5 class="mb-2">No upcoming trips yet</h5>
+                                    <p class="text-muted mb-4">Create your first trip to get personalized suggestions and start building your itinerary.</p>
+                                    <a href="{% url 'mojo:create_trip' %}" class="btn btn-primary">Create a Trip</a>
+                                </div>
+                            </div>
+                        </div>
                     {% endfor %}
-<!-- Button to create a trip -->
-
                 </div>
-                <a href="{% url 'mojo:create_trip' %}" class="btn btn-primary">Create a Trip</a>
             </div>
         </div>
     </div>
