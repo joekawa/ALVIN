@@ -12,6 +12,7 @@ urlpatterns = [
   path('signup/', views.signup, name='signup'),
   path('profile/', views.profile, name='profile'),
   path('welcome/', views.welcome, name='welcome'),
+  path('create_trip_form/', views.create_trip_form, name='create_trip_form'),
   path('create_trip/', views.create_trip, name='create_trip'),
   path('logout/', LogoutView.as_view(next_page='mojo:login'), name='logout'),
   path('trip/<uuid:trip_id>/details/', views.trip, name='trip'),
@@ -22,5 +23,7 @@ urlpatterns = [
   path('trip/<uuid:trip_id>/share_trip/', views.share_trip, name='share_trip'),
   path('trip/<uuid:trip_activity_id>/add_comment/', views.add_comment, name='add_comment'),
   path('trip/<user_generated_trip_activity_id>/delete_activity/', views.delete_user_entered_activity, name='delete_user_entered_activity'),
+  path('trip/<uuid:trip_id>/delete/', views.delete_trip, name='delete_trip'),
 ]
+
 

@@ -87,6 +87,11 @@ def profile(request):
 
 
 @login_required(login_url='mojo:login')
+def create_trip_form(request):
+  form = TripCreationForm()
+  return render(request, 'create_trip.html', {'form': form})
+
+@login_required(login_url='mojo:login')
 def create_trip(request):
     """
     Handles GET and POST requests for creating a new trip.
@@ -134,7 +139,7 @@ def create_trip(request):
            # return redirect('mojo:index')
     #else:
        # form = TripCreationForm()
-    return render(request, 'create_trip.html', {'form': form})
+    return redirect('mojo:index')
 
 
 @login_required(login_url='mojo:login')
@@ -361,3 +366,25 @@ def delete_user_entered_activity(request, user_generated_trip_activity_id):
 
 def welcome(request):
   return render(request, 'welcome.html')
+
+
+@login_required(login_url='mojo:login')
+def delete_trip(request, trip_id):
+  """
+  Delete a trip owned by the current user. POST only.
+  """
+  if request.method != 'POST':
+    return redirect('mojo:index')
+
+  trip = get_object_or_404(Trip, uuid=trip_id)
+
+  # Only the owner/creator may delete the trip
+  is_owner = (trip.created_by == request.user) or TripParticipant.objects.filter(
+      trip=trip, user=request.user, role='owner'
+  ).exists()
+
+  if not is_owner:
+    return redirect('mojo:index')
+
+  trip.delete()
+  return redirect('mojo:index')

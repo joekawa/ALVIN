@@ -11,7 +11,7 @@
                         <h1 class="h3 mb-1">Welcome, {{ user.email }}!</h1>
                         <p class="text-muted mb-0">Here are your upcoming trips.</p>
                     </div>
-                    <a href="{% url 'mojo:create_trip' %}" class="btn btn-primary">Create a Trip</a>
+                    <a href="{% url 'mojo:create_trip_form' %}" class="btn btn-primary">Create a Trip</a>
                 </div>
 
                 <div class="row">
@@ -30,29 +30,41 @@
                                     <div class="mt-auto d-flex justify-content-between align-items-center">
                                         <a href="{% url 'mojo:trip' trip_id=trip.uuid %}" class="btn btn-outline-primary btn-sm">View details</a>
 
-                                        {% with modal_id='shareModal-'|add:forloop.counter|stringformat:"s" %}
-                                        <button type="button" class="btn btn-light btn-sm" data-toggle="modal" data-target="#{{ modal_id }}">
-                                            <i class="fas fa-share-alt mr-1"></i>Share
-                                        </button>
+                                        {% with uuid_str=trip.uuid|stringformat:"s" %}
+                                        {% with share_modal_id='shareModal-'|add:uuid_str delete_modal_id='deleteModal-'|add:uuid_str %}
+                                        <div class="d-flex align-items-center gap-2">
+                                            {% if trip.created_by_id == user.id %}
+                                            <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#{{ delete_modal_id }}">
+                                                <i class="fas fa-trash mr-1"></i>Delete
+                                            </button>
+                                            {% endif %}
+                                            <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#{{ share_modal_id }}">
+                                                <i class="fas fa-share-alt mr-1"></i>Share
+                                            </button>
+                                        </div>
                                         <!-- Share Modal -->
-                                        <div class="modal fade" id="{{ modal_id }}" tabindex="-1" role="dialog" aria-labelledby="{{ modal_id }}Label" aria-hidden="true">
-                                            <div class="modal-dialog modal-sm" role="document">
+
+                                        <div class="modal fade" id="{{ share_modal_id }}" tabindex="-1" aria-labelledby="{{ share_modal_id }}Label" aria-hidden="true">
+                                            <div class="modal-dialog modal-sm">
                                                 <div class="modal-content">
                                                     <div class="modal-header">
-                                                        <h5 class="modal-title" id="{{ modal_id }}Label">Share with a friend</h5>
-                                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                            <span aria-hidden="true">&times;</span>
-                                                        </button>
+                                                        <h5 class="modal-title" id="{{ share_modal_id }}Label">Share with a friend</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                     </div>
                                                     <div class="modal-body">
-                                                        <form method="post" action="{% url 'mojo:share_trip' trip_id=trip.uuid %}">
+                                                        <form method="post" action="{% url 'mojo:share_trip' trip_id=trip.uuid %}" class="needs-validation" novalidate>
                                                             {% csrf_token %}
-                                                            <div class="form-group">
-                                                                <label for="email-{{ forloop.counter }}">Email address</label>
-                                                                <input type="email" class="form-control" id="email-{{ forloop.counter }}" name="email" placeholder="friend@example.com" required>
+                                                            <div class="mb-3">
+                                                                <label for="email-{{ forloop.counter }}" class="form-label">Email address</label>
+                                                                <div class="input-group">
+                                                                    <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                                                    <input type="email" class="form-control" id="email-{{ forloop.counter }}" name="email" placeholder="friend@example.com" required>
+                                                                    <div class="invalid-feedback">Please enter a valid email.</div>
+                                                                </div>
+                                                                <div class="form-text">We’ll send an invite to view and collaborate on this trip.</div>
                                                             </div>
-                                                            <div class="d-flex justify-content-end">
-                                                                <button type="button" class="btn btn-secondary mr-2" data-dismiss="modal">Close</button>
+                                                            <div class="d-flex justify-content-end gap-2">
+                                                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
                                                                 <button type="submit" class="btn btn-primary">Share</button>
                                                             </div>
                                                         </form>
@@ -60,6 +72,31 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        {% if trip.created_by_id == user.id %}
+                                        <!-- Delete Modal -->
+                                        <div class="modal fade" id="{{ delete_modal_id }}" tabindex="-1" aria-labelledby="{{ delete_modal_id }}Label" aria-hidden="true">
+                                            <div class="modal-dialog modal-sm">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="{{ delete_modal_id }}Label"><i class="fas fa-exclamation-triangle text-danger me-2"></i>Delete trip</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p class="mb-3">Are you sure you want to delete "{{ trip.trip_name }}"?</p>
+                                                        <p class="text-muted small mb-0">This action cannot be undone.</p>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <form method="post" action="{% url 'mojo:delete_trip' trip_id=trip.uuid %}">
+                                                            {% csrf_token %}
+                                                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                            <button type="submit" class="btn btn-danger">Delete</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                        {% endwith %}
                                         {% endwith %}
                                     </div>
                                 </div>
@@ -71,7 +108,7 @@
                                 <div class="card-body text-center py-5">
                                     <h5 class="mb-2">No upcoming trips yet</h5>
                                     <p class="text-muted mb-4">Create your first trip to get personalized suggestions and start building your itinerary.</p>
-                                    <a href="{% url 'mojo:create_trip' %}" class="btn btn-primary">Create a Trip</a>
+                                    <a href="{% url 'mojo:create_trip_form' %}" class="btn btn-primary">Create a Trip</a>
                                 </div>
                             </div>
                         </div>

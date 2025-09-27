@@ -79,19 +79,17 @@
                                     </h6>
                                     <p class="card-text">{{ activity_suggestion.description }}</p>
 
-                                    <div class="user-feedback mt-auto d-flex align-items-center">
-                                        <button class="btn btn-light btn-sm mr-2" data-toggle="modal" data-target="#comments-modal-{{ forloop.counter }}"><i class="far fa-comments"></i></button>
+                                    <div class="user-feedback mt-auto d-flex align-items-center gap-2">
+                                        <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#comments-modal-{{ forloop.counter }}"><i class="far fa-comments"></i></button>
                                         <!-- Modal -->
-                                        <div class="modal fade" id="comments-modal-{{ forloop.counter }}" tabindex="-1" role="dialog" aria-labelledby="comments-modal-{{ forloop.counter }}-label" aria-hidden="true">
-                                            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
+                                        <div class="modal fade" id="comments-modal-{{ forloop.counter }}" tabindex="-1" aria-labelledby="comments-modal-{{ forloop.counter }}-label" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                                                 <div class="modal-content shadow-sm border-0">
                                                     <div class="modal-header bg-light border-0">
                                                         <h5 class="modal-title" id="comments-modal-{{ forloop.counter }}-label">
                                                             <i class="far fa-comments mr-2"></i> Comments
                                                         </h5>
-                                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                            <span aria-hidden="true">&times;</span>
-                                                        </button>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                     </div>
                                                     <div class="modal-body">
                                                         {% if activity_suggestion.tripactivitycomment_set.all %}
@@ -117,7 +115,7 @@
                                                             </div>
                                                     </div>
                                                     <div class="modal-footer border-0">
-                                                        <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                                                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
                                                         <button type="submit" class="btn btn-primary">Post Comment</button>
                                                         </form>
                                                     </div>
@@ -125,10 +123,10 @@
                                             </div>
                                         </div>
 
-                                        <a href="{% url 'mojo:heart_model_suggestion' model_trip_activity_id=activity_suggestion.id %}" class="mr-2">
+                                        <a href="{% url 'mojo:heart_model_suggestion' model_trip_activity_id=activity_suggestion.id %}" class="me-2">
                                             <i class="{% if activity_suggestion.id in saved_place_ids %}fas fa-heart text-secondary{% elif activity_suggestion.id in no_status_place_ids %}far fa-heart text-secondary{% endif %}"></i>
                                         </a>
-                                        <a href="{% url 'mojo:reject_model_suggestion' model_trip_activity_id=activity_suggestion.id %}" class="mr-2">
+                                        <a href="{% url 'mojo:reject_model_suggestion' model_trip_activity_id=activity_suggestion.id %}" class="me-2">
                                             <i class="fas fa-times"></i>
                                         </a>
                                     </div>

@@ -1,39 +1,93 @@
-
 {% extends 'base.html' %}
-{% load static %}
-
 {% block content %}
+<!-- Flatpickr datepicker CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
+<style>
+  .form-group label {
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+  }
+  .autocomplete-container {
+    position: relative;
+  }
+  .autocomplete-container input {
+    width: 100%;
+    /* mimic Bootstrap form-control look without altering JS */
+    display: block;
+    padding: 0.375rem 2.25rem 0.375rem 0.75rem; /* right padding for clear button */
+</style>
 
-<div class="container">
+<div class="container py-4">
   <div class="row justify-content-center">
-      <div class="col-md-4 col-sm-6 col-xs-12">
-          <h2>Create Trip</h2>
-          <form method="post" action="{% url 'mojo:create_trip' %}">
+    <div class="col-lg-6 col-md-8">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h2 class="card-title h4">Create Trip</h2>
+          <form method="post" action="{% url 'mojo:create_trip' %}" novalidate>
             {% csrf_token %}
 
-              <div class="form-group">
-                  {{ form.trip_name.label }}
-                  {{ form.trip_name }}
-              </div>
+            <div class="form-group mb-3">
+              {{ form.trip_name.label }}
+              {{ form.trip_name }}
+            </div>
+            <div class="form-group mb-3">
               <div class="autocomplete-container" id="autocomplete-container-city">
                 <label for="city-autocomplete">Destination</label>
               </div>
-              <div class="form-group">
-                  {{ form.start_date.label }}
+              <div class="help-text">Start typing a US city and select from the suggestions.</div>
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <div class="form-group m-0">
+                  {{ form.start_date.label_tag }}
                   {{ form.start_date }}
+                </div>
               </div>
-              <div class="form-group">
-                  {{ form.end_date.label }}
+              <div class="col-md-6">
+                <div class="form-group m-0">
+                  {{ form.end_date.label_tag }}
                   {{ form.end_date }}
+                </div>
               </div>
-              <button type="submit" class="btn btn-primary">Create Trip</button>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg w-100">Create Trip</button>
           </form>
-      </div>
+    </div>
   </div>
 </div>
+<!-- Flatpickr datepicker JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-    console.log(document.getElementById("autocomplete-container"));
+    console.log(document.getElementById("autocomplete-container-city"));
+
+    // Initialize enhanced date pickers using Flatpickr
+    // Targets standard Django field names (input[name="start_date"], input[name="end_date"]).
+    (function() {
+      // Guard in case elements are not present
+      var startInput = document.querySelector('input[name="start_date"]');
+      var endInput = document.querySelector('input[name="end_date"]');
+      if (!startInput || !endInput || typeof flatpickr === 'undefined') return;
+
+      var endPicker = flatpickr(endInput, {
+        altInput: true,
+        altFormat: 'F j, Y',
+        dateFormat: 'Y-m-d'
+      });
+
+      var startPicker = flatpickr(startInput, {
+        altInput: true,
+        altFormat: 'F j, Y',
+        dateFormat: 'Y-m-d',
+        onChange: function(selectedDates) {
+          if (selectedDates && selectedDates.length) {
+            endPicker.set('minDate', selectedDates[0]);
+          }
+        }
+      });
+    })();
 
 function addressAutocomplete(containerElement, callback, options) {
   // create input element
