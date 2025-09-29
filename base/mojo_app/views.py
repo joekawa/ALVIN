@@ -6,25 +6,31 @@ from .models import *
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
 from openai import OpenAI
+from django.utils import timezone
 import json
 import re
-
 
 # Create your views here.
 
 #* I NEED TO UPDATE THIS TO CHECK FOR ALL TRIPS THE USER HAS CREATED
 #* OR IS A PARTICIPANT OF
-@login_required(login_url='mojo:welcome')
+@login_required(login_url='mojo:login')
 def index(request):
     """
     Renders the index page, which contains a list of trips
     created by the currently logged in user.
     """
+    include_past = request.GET.get('show_past') in ['1', 'true', 'True']
     trips = Trip.objects.filter(tripparticipant__user=request.user)
-#    trips_shared = Trip.objects.filter(tripparticipant__user=request.user)
+    if not include_past:
+        today = timezone.now().date()
+        trips = trips.filter(end_date__gte=today)
 
-    return render(request, 'index.html', {'user': request.user, 'trips': trips})
-
+    return render(request, 'index.html', {
+        'user': request.user,
+        'trips': trips,
+        'include_past': include_past,
+    })
 
 def login_view(request):
   """

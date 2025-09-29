@@ -11,7 +11,14 @@
                         <h1 class="h3 mb-1">Welcome, {{ user.email }}!</h1>
                         <p class="text-muted mb-0">Here are your upcoming trips.</p>
                     </div>
-                    <a href="{% url 'mojo:create_trip_form' %}" class="btn btn-primary">Create a Trip</a>
+                    <div class="d-flex align-items-center gap-2">
+                        {% if include_past %}
+                            <a href="{% url 'mojo:index' %}" class="btn btn-sm btn-outline-secondary">Hide past trips</a>
+                        {% else %}
+                            <a href="{% url 'mojo:index' %}?show_past=1" class="btn btn-sm btn-outline-secondary">Show past trips</a>
+                        {% endif %}
+                        <a href="{% url 'mojo:create_trip_form' %}" class="btn btn-primary">Create a Trip</a>
+                    </div>
                 </div>
 
                 <div class="row">
