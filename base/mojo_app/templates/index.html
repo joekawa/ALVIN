@@ -38,7 +38,7 @@
                                                 <i class="fas fa-trash mr-1"></i>Delete
                                             </button>
                                             {% endif %}
-                                            <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#{{ share_modal_id }}">
+                                            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#{{ share_modal_id }}">
                                                 <i class="fas fa-share-alt mr-1"></i>Share
                                             </button>
                                         </div>
@@ -54,6 +54,7 @@
                                                     <div class="modal-body">
                                                         <form method="post" action="{% url 'mojo:share_trip' trip_id=trip.uuid %}" class="needs-validation" novalidate>
                                                             {% csrf_token %}
+                                                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
                                                             <div class="mb-3">
                                                                 <label for="email-{{ forloop.counter }}" class="form-label">Email address</label>
                                                                 <div class="input-group">

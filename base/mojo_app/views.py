@@ -14,7 +14,7 @@ import re
 
 #* I NEED TO UPDATE THIS TO CHECK FOR ALL TRIPS THE USER HAS CREATED
 #* OR IS A PARTICIPANT OF
-@login_required(login_url='mojo:login')
+@login_required(login_url='mojo:welcome')
 def index(request):
     """
     Renders the index page, which contains a list of trips
@@ -37,8 +37,17 @@ def login_view(request):
     user = CustomUser.objects.filter(email=email).first()
     if user and user.check_password(password):
       login(request, user)
+      # Determine where to redirect back to: POST next, then GET next, then referer
+      next_url = (
+        request.POST.get('next')
+        or request.GET.get('next')
+        or request.META.get('HTTP_REFERER')
+        or ''
+      )
+      if isinstance(next_url, str) and next_url.startswith('/'):
+        return redirect(next_url)
       return redirect('mojo:index')
-
+    # If credentials invalid, fall through to render login page again
   return render(request, 'login.html')
 
 
@@ -68,7 +77,7 @@ def signup(request):
   form = CustomUserCreationForm()
   return render(request, 'signup.html', {'form': form})
 
-@login_required(login_url='mojo:login')
+@login_required(login_url='mojo:welcome')
 def profile(request):
 
   """
@@ -86,12 +95,12 @@ def profile(request):
   return render(request, 'profile.html', {'form': form})
 
 
-@login_required(login_url='mojo:login')
+@login_required(login_url='mojo:welcome')
 def create_trip_form(request):
   form = TripCreationForm()
   return render(request, 'create_trip.html', {'form': form})
 
-@login_required(login_url='mojo:login')
+@login_required(login_url='mojo:welcome')
 def create_trip(request):
     """
     Handles GET and POST requests for creating a new trip.
@@ -142,7 +151,7 @@ def create_trip(request):
     return redirect('mojo:index')
 
 
-@login_required(login_url='mojo:login')
+@login_required(login_url='mojo:welcome')
 def trip(request, trip_id):
 
     trip = get_object_or_404(Trip, uuid=trip_id)
@@ -303,9 +312,6 @@ def reject_model_suggestion(request, model_trip_activity_id):
   return redirect('mojo:trip', trip_id=model_trip_activity.trip.uuid)
 
 
-#! PROBLEM.  IF A USER SHARES A TRIP
-#! IT HAS TO BE SHARED WITH A USER.  WHAT HAPPENS WHEN A USER SHARES A TRIP
-#! WITH A NON-USER EMAIL?
 @login_required(login_url='mojo:login')
 def share_trip(request, trip_id):
   """
@@ -345,7 +351,10 @@ def share_trip(request, trip_id):
     else:
       print(f"SharedTrip object already exists for trip {trip.uuid}")
 
-
+  # Redirect back to the page the share was initiated from
+  next_url = request.POST.get('next') or request.META.get('HTTP_REFERER') or ''
+  if isinstance(next_url, str) and next_url.startswith('/'):
+    return redirect(next_url)
   return redirect('mojo:index')
 
 @login_required(login_url='mojo:login')
