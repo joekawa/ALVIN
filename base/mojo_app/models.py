@@ -110,46 +110,25 @@ class CustomUser(AbstractBaseUser):
     zip_code = models.CharField(max_length=10)
     dob = models.DateField()
     is_admin = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=True)
     objects = CustomUserManager()
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['city','state','zip_code','dob']
 
     def __str__(self):
-        """
-        Returns the string representation of the user, which is the user's email address.
-        """
         return self.email
 
     def has_perm(self, perm, obj=None):
-        """
-        Simple property that returns whether the user has the specified permission or not.
-
-        Since we don't have any permission system in place, we just return True.
-        """
         return True
 
     def has_module_perms(self, app_label):
-        """
-        Simple property that returns whether the user has permissions to view the app or not.
-
-        Since we don't have any permission system in place, we just return True.
-        """
         return True
-
 
     @property
     def is_staff(self):
-        """
-        Simple property that returns whether the user is a staff member or not.
-
-        We use `is_admin` as the flag for this property, since we don't have
-        a separate field for it. This is okay since we don't need to treat
-        staff members differently than admins in any way.
-        """
         return self.is_admin
 
 
+ 
 class Trip(models.Model):
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     trip_name = models.CharField(max_length=255)
@@ -189,16 +168,7 @@ class TripParticipant(models.Model):
             unique_together = ("trip", "user")
 
     def __str__(self):
-
-        """
-        Returns a string representation of the object, which is the username of the user
-        followed by the role in parentheses, followed by the name of the trip.
-
-        Example:
-            "john (contributor) in Trip to Disneyland"
-        """
-
-        return f"{self.user.username} ({self.role}) in {self.trip.name}"
+        return f"{self.user} ({self.role}) in {self.trip.trip_name}"
 
 
 
@@ -232,6 +202,28 @@ class ModelTripActivity(models.Model):
     def __str__(self):
         return self.name
 
+
+class TripPlanItem(models.Model):
+    """
+    A planned item for a trip, created from a model suggestion.
+    Visible to all participants. Only owners/contributors can add.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    trip = models.ForeignKey('Trip', on_delete=models.CASCADE, related_name='plan_items')
+    activity = models.ForeignKey('ModelTripActivity', on_delete=models.CASCADE, related_name='planned_in_trips')
+    added_by = models.ForeignKey('CustomUser', on_delete=models.CASCADE, related_name='added_plan_items')
+    added_at = models.DateTimeField(auto_now_add=True)
+    scheduled_date = models.DateField(null=True, blank=True)
+    scheduled_time = models.TimeField(null=True, blank=True)
+    position = models.PositiveIntegerField(default=0, db_index=True)
+
+    class Meta:
+        unique_together = ("trip", "activity")
+        ordering = ["position", "added_at"]
+
+    def __str__(self):
+        return f"PlanItem({self.trip.trip_name}: {self.activity.name})"
+
 #* THIS IS HOW THE USER REACTED TO THE MODEL SUGGESTION
 class TripActivityDetails(models.Model):
     STATUS_CHOICES = [
@@ -259,6 +251,8 @@ class TripActivityDetails(models.Model):
 class TripActivityComment(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     trip_activity = models.ForeignKey(ModelTripActivity, on_delete=models.CASCADE)
+    # Optional link to a specific planned item
+    plan_item = models.ForeignKey('TripPlanItem', on_delete=models.CASCADE, null=True, blank=True, related_name='plan_comments')
     comment = models.TextField()
     created_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)

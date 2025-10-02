@@ -24,6 +24,12 @@ urlpatterns = [
   path('trip/<uuid:trip_activity_id>/add_comment/', views.add_comment, name='add_comment'),
   path('trip/<user_generated_trip_activity_id>/delete_activity/', views.delete_user_entered_activity, name='delete_user_entered_activity'),
   path('trip/<uuid:trip_id>/delete/', views.delete_trip, name='delete_trip'),
+  path('trip/<uuid:trip_id>/plan/add/<uuid:activity_id>/', views.add_plan_item, name='add_plan_item'),
+  path('trip/<uuid:trip_id>/plan/delete/<uuid:plan_item_id>/', views.delete_plan_item, name='delete_plan_item'),
+  path('trip/<uuid:trip_id>/plan/update/<uuid:plan_item_id>/', views.update_plan_item, name='update_plan_item'),
+  path('trip/<uuid:trip_id>/plan/move/<uuid:plan_item_id>/', views.move_plan_item, name='move_plan_item'),
+  path('trip/<uuid:trip_id>/participants/<uuid:participant_id>/role/', views.update_participant_role, name='update_participant_role'),
+  path('trip/<uuid:trip_id>/plan/<uuid:plan_item_id>/comment/', views.add_plan_item_comment, name='add_plan_item_comment'),
 ]
 
 

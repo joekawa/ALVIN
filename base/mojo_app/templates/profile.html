@@ -1,43 +1,49 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class='mb-3'>
-</div><!-- profile.html -->
 
-<!-- profile.html -->
+<div class="container py-3">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+          <h4 class="card-title mb-1">Your Profile</h4>
+          <p class="text-muted mb-4">Update your location details so we can tailor better trip ideas.</p>
 
-<!-- profile.html -->
+          <form method="post">
+            {% csrf_token %}
 
-<form method="post" class="form-horizontal">
-  {% csrf_token %}
-  <div class="form-group row">
-    <label for="id_city" class="col-sm-2 control-label">City</label>
-    <div>
-    <input type="text" class="form-control col-sm-10" id="id_city" name="city" value="{{ user.city }}" required>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="id_city" class="form-label">City</label>
+                <input type="text" class="form-control" id="id_city" name="city" value="{{ user.city }}" placeholder="e.g., Omaha" required>
+              </div>
+
+              <div class="col-md-6">
+                <label for="id_state" class="form-label">State</label>
+                <input type="text" class="form-control" id="id_state" name="state" value="{{ user.state }}" placeholder="e.g., NE" required>
+              </div>
+
+              <div class="col-md-6">
+                <label for="id_zip_code" class="form-label">Zip Code</label>
+                <input type="text" class="form-control" id="id_zip_code" name="zip_code" value="{{ user.zip_code }}" placeholder="e.g., 68046" required>
+              </div>
+
+              <div class="col-md-6">
+                <label for="id_dob" class="form-label">Date of Birth</label>
+                <input type="date" class="form-control" id="id_dob" name="dob" value="{{ user.dob|date:'Y-m-d' }}" required>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-end mt-4">
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save me-1"></i>Save changes
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   </div>
-  <div class="form-group row">
-    <label for="id_state" class="col-sm-2 control-label">State</label>
-    <div>
-      <input type="text" class="form-control col-sm-10" id="id_city" name="city" value="{{ user.state }}" required>
-    </div>
-  </div>
-  <div class="form-group row">
-    <label for="id_zip_code" class="col-sm-2 control-label">Zip Code</label>
-    <div>
-      <input type="text" class="form-control col-sm-10" id="id_city" name="city" value="{{ user.zip_code }}" required>
-    </div>
-  </div>
-  <div class="form-group row">
-    <label for="id_dob" class="col-sm-2 control-label">Date of Birth</label>
-    <div>
-      <input type="date" class="form-control col-sm-20" id="id_city" name="city" value="{{ user.dob }}" required>
-    </div>
-  </div>
-  <div class="form-group">
-    <div class="col-sm-offset-2 col-sm-10">
-      <button type="submit" class="btn btn-primary">Save</button>
-    </div>
-  </div>
-</form>
+</div>
 
 {% endblock %}

@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
 from openai import OpenAI
 from django.utils import timezone
+from django.db.models import Max
 import json
 import re
 
@@ -163,6 +164,9 @@ def trip(request, trip_id):
     trip = get_object_or_404(Trip, uuid=trip_id)
     activities = trip.userenteredactivity_set.all()
     model_suggestions = ModelTripActivity.objects.filter(trip=trip).exclude(trip_locations__status='rejected')
+    # Trip plan items visible to all participants
+    plan_items = TripPlanItem.objects.filter(trip=trip).select_related('activity')
+    planned_activity_ids = set(plan_items.values_list('activity__id', flat=True))
     # Determine which model suggestions are saved by the current user
     saved_place_ids = list(
         TripActivityDetails.objects.filter(
@@ -186,11 +190,22 @@ def trip(request, trip_id):
         comments = TripActivityComment.objects.filter(trip_activity=activity)
         activity_comments[activity.id] = comments
     participant = TripParticipant.objects.filter(trip=trip)
+    # Determine editor permissions: owner or contributor
+    is_owner = trip.created_by == request.user
+    is_contributor = TripParticipant.objects.filter(trip=trip, user=request.user, role='contributor').exists()
+    is_owner_role = TripParticipant.objects.filter(trip=trip, user=request.user, role='owner').exists()
+    is_editor = is_owner or is_contributor or is_owner_role
+    can_manage_participants = is_owner or is_owner_role
+
     return render(request, 'trip.html', {'trip': trip,
                                          'activities': activities,
                                          'model_suggestions': model_suggestions,
                                          'activity_comments': activity_comments,
                                          'participant': participant,
+                                         'plan_items': plan_items,
+                                         'planned_activity_ids': planned_activity_ids,
+                                         'is_editor': is_editor,
+                                         'can_manage_participants': can_manage_participants,
                                          'saved_place_ids': saved_place_ids,
                                          'no_status_place_ids': no_status_place_ids})
 
@@ -403,3 +418,178 @@ def delete_trip(request, trip_id):
 
   trip.delete()
   return redirect('mojo:index')
+
+
+@login_required(login_url='mojo:login')
+def add_plan_item(request, trip_id, activity_id):
+  """
+  Add a suggested activity to the Trip Plan. POST only.
+  Only owners or contributors may add items. Viewers are read-only.
+  """
+  trip = get_object_or_404(Trip, uuid=trip_id)
+  if request.method != 'POST':
+    return redirect('mojo:trip', trip_id=trip.uuid)
+
+
+  # Permission check: owner or contributor (or participant with role owner)
+  is_owner = trip.created_by == request.user
+  is_contributor = TripParticipant.objects.filter(trip=trip, user=request.user, role='contributor').exists()
+  is_owner_role = TripParticipant.objects.filter(trip=trip, user=request.user, role='owner').exists()
+  if not (is_owner or is_contributor or is_owner_role):
+    return redirect('mojo:trip', trip_id=trip.uuid)
+  # Determine next position
+  max_pos = TripPlanItem.objects.filter(trip=trip).aggregate(Max('position')).get('position__max') or 0
+  activity = get_object_or_404(ModelTripActivity, id=activity_id, trip=trip)
+  TripPlanItem.objects.get_or_create(
+      trip=trip,
+      activity=activity,
+      defaults={'added_by': request.user, 'position': max_pos + 1}
+  )
+  # Mark this suggestion as saved for the trip (and current user)
+  TripActivityDetails.objects.update_or_create(
+      trip=trip,
+      place=activity,
+      defaults={'status': 'saved', 'user': request.user}
+  )
+  return redirect('mojo:trip', trip_id=trip.uuid)
+
+
+
+@login_required(login_url='mojo:login')
+def delete_plan_item(request, trip_id, plan_item_id):
+  """
+  Delete a TripPlanItem. POST only.
+  Only owners or contributors may delete items.
+  """
+  trip = get_object_or_404(Trip, uuid=trip_id)
+  if request.method != 'POST':
+    return redirect('mojo:trip', trip_id=trip.uuid)
+
+  is_owner = trip.created_by == request.user
+  is_contributor = TripParticipant.objects.filter(trip=trip, user=request.user, role='contributor').exists()
+  is_owner_role = TripParticipant.objects.filter(trip=trip, user=request.user, role='owner').exists()
+  if not (is_owner or is_contributor or is_owner_role):
+    return redirect('mojo:trip', trip_id=trip.uuid)
+
+  plan_item = get_object_or_404(TripPlanItem, id=plan_item_id, trip=trip)
+  plan_item.delete()
+  return redirect('mojo:trip', trip_id=trip.uuid)
+
+
+@login_required(login_url='mojo:login')
+def update_plan_item(request, trip_id, plan_item_id):
+  """
+  Update scheduled_date/time for a TripPlanItem. POST only.
+  Only owners or contributors may update items.
+  Expects fields: scheduled_date (YYYY-MM-DD or empty), scheduled_time (HH:MM or empty)
+  """
+  trip = get_object_or_404(Trip, uuid=trip_id)
+  if request.method != 'POST':
+    return redirect('mojo:trip', trip_id=trip.uuid)
+
+  is_owner = trip.created_by == request.user
+  is_contributor = TripParticipant.objects.filter(trip=trip, user=request.user, role='contributor').exists()
+  is_owner_role = TripParticipant.objects.filter(trip=trip, user=request.user, role='owner').exists()
+  if not (is_owner or is_contributor or is_owner_role):
+    return redirect('mojo:trip', trip_id=trip.uuid)
+
+  plan_item = get_object_or_404(TripPlanItem, id=plan_item_id, trip=trip)
+  sched_date = request.POST.get('scheduled_date') or None
+  sched_time = request.POST.get('scheduled_time') or None
+  # Assign parsed values; let Django handle parsing via form fields if valid
+  plan_item.scheduled_date = sched_date if sched_date else None
+  plan_item.scheduled_time = sched_time if sched_time else None
+  plan_item.save(update_fields=['scheduled_date', 'scheduled_time'])
+  return redirect('mojo:trip', trip_id=trip.uuid)
+
+
+@login_required(login_url='mojo:login')
+def move_plan_item(request, trip_id, plan_item_id):
+  """
+  Move a TripPlanItem up or down within a trip's plan.
+  POST only with field 'direction' in {'up','down'}.
+  Only owners or contributors may reorder.
+  """
+  trip = get_object_or_404(Trip, uuid=trip_id)
+  if request.method != 'POST':
+    return redirect('mojo:trip', trip_id=trip.uuid)
+
+  is_owner = trip.created_by == request.user
+  is_contributor = TripParticipant.objects.filter(trip=trip, user=request.user, role='contributor').exists()
+  is_owner_role = TripParticipant.objects.filter(trip=trip, user=request.user, role='owner').exists()
+  if not (is_owner or is_contributor or is_owner_role):
+    return redirect('mojo:trip', trip_id=trip.uuid)
+
+  plan_item = get_object_or_404(TripPlanItem, id=plan_item_id, trip=trip)
+  direction = request.POST.get('direction')
+  if direction not in ('up', 'down'):
+    return redirect('mojo:trip', trip_id=trip.uuid)
+
+  if direction == 'up':
+    neighbor = TripPlanItem.objects.filter(trip=trip, position__lt=plan_item.position).order_by('-position').first()
+  else:
+    neighbor = TripPlanItem.objects.filter(trip=trip, position__gt=plan_item.position).order_by('position').first()
+
+  if neighbor:
+    plan_item.position, neighbor.position = neighbor.position, plan_item.position
+    plan_item.save(update_fields=['position'])
+    neighbor.save(update_fields=['position'])
+  return redirect('mojo:trip', trip_id=trip.uuid)
+
+
+@login_required(login_url='mojo:login')
+def update_participant_role(request, trip_id, participant_id):
+  """
+  Update a participant's role. Owner-only action. POST only.
+  Prevent demoting the last owner on the trip.
+  """
+  trip = get_object_or_404(Trip, uuid=trip_id)
+  if request.method != 'POST':
+    return redirect('mojo:trip', trip_id=trip.uuid)
+
+  # Only owners may manage roles
+  is_owner = (trip.created_by == request.user) or TripParticipant.objects.filter(trip=trip, user=request.user, role='owner').exists()
+  if not is_owner:
+    return redirect('mojo:trip', trip_id=trip.uuid)
+
+  tp = get_object_or_404(TripParticipant, id=participant_id, trip=trip)
+  new_role = request.POST.get('role')
+  if new_role not in ('owner', 'contributor', 'viewer'):
+    return redirect('mojo:trip', trip_id=trip.uuid)
+
+  # Prevent removing the last owner
+  if tp.role == 'owner' and new_role != 'owner':
+    owner_count = TripParticipant.objects.filter(trip=trip, role='owner').count()
+    if owner_count <= 1:
+      return redirect('mojo:trip', trip_id=trip.uuid)
+
+  tp.role = new_role
+  tp.save(update_fields=['role'])
+  return redirect('mojo:trip', trip_id=trip.uuid)
+
+
+@login_required(login_url='mojo:login')
+def add_plan_item_comment(request, trip_id, plan_item_id):
+  """
+  Add a comment to a TripPlanItem. POST only.
+  Any participant (owner/contributor/viewer) may comment.
+  """
+  trip = get_object_or_404(Trip, uuid=trip_id)
+  if request.method != 'POST':
+    return redirect('mojo:trip', trip_id=trip.uuid)
+
+  # Ensure the user is related to the trip (creator or participant)
+  is_related = (trip.created_by == request.user) or TripParticipant.objects.filter(trip=trip, user=request.user).exists()
+  if not is_related:
+    return redirect('mojo:trip', trip_id=trip.uuid)
+
+  plan_item = get_object_or_404(TripPlanItem, id=plan_item_id, trip=trip)
+  text = (request.POST.get('comment') or '').strip()
+  if text:
+    TripActivityComment.objects.create(
+      trip_activity=plan_item.activity,
+      plan_item=plan_item,
+      comment=text,
+      created_by=request.user,
+    )
+  return redirect('mojo:trip', trip_id=trip.uuid)
