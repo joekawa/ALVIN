@@ -35,7 +35,7 @@ SECRET_KEY = 'utb5=1j!f-*ad#0b66%b7e*t&zqp6o#4e2o_w8#7-%7!z12%=3'
 # SECURITY WARNIN: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['smart-roamer-46d3ed8a2dfe.herokuapp.com']
+ALLOWED_HOSTS = ['smart-roamer-46d3ed8a2dfe.herokuapp.com', 'localhost', '127.0.0.1']
 
 
 # Application definition
