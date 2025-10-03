@@ -6,3 +6,4 @@ postgres.m
 .staticfiles
 .env
 .python-version
+venv/
