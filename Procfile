@@ -1,1 +1,1 @@
-web: gunicorn Mojo.wsgi
+web: gunicorn base.wsgi
