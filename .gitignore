@@ -7,3 +7,4 @@ postgres.m
 .env
 .python-version
 venv/
+base/.env
