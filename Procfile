@@ -1,1 +1,1 @@
-gunicorn base.wsgi
+web: gunicorn mojo_app.wsgi
