@@ -20,7 +20,7 @@ DB_PASSWORD = os.getenv('DB_PASSWORD')
 DB_NAME = os.getenv('DB_NAME')
 
 
-os.environ['DJANGO_SETTINGS_MODULE'] = 'base.settings'
+# Do not override DJANGO_SETTINGS_MODULE here; manage.py and wsgi.py set it
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -30,12 +30,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'utb5=1j!f-*ad#0b66%b7e*t&zqp6o#4e2o_w8#7-%7!z12%=3'
+# Use env var in production; provide a dev default if missing
+SECRET_KEY = os.getenv('SECRET_KEY', 'dev-insecure-secret-key')
+# DEBUG controlled via env (default on for local dev)
+DEBUG = os.getenv('DEBUG', '1') == '1'
 
-# SECURITY WARNIN: don't run with debug turned on in production!
-DEBUG = False
-
-ALLOWED_HOSTS = ['smart-roamer-46d3ed8a2dfe.herokuapp.com', 'localhost']
+ALLOWED_HOSTS = ['smart-roamer-46d3ed8a2dfe.herokuapp.com', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -82,18 +82,27 @@ WSGI_APPLICATION = 'base.wsgi.application'
 
 
 # Database
-# https://docs.djangoproject.com/en/3.0/ref/settings/#databases
+# Use SQLite locally by default; switch to Postgres when USE_SQLITE=0
+USE_SQLITE = os.getenv('USE_SQLITE', '1') == '1'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': DB_NAME,
-        'USER': DB_USERNAME,
-        'PASSWORD': DB_PASSWORD,
-        'HOST': 'localhost',
-        'PORT': '5432',
+if USE_SQLITE:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': DB_NAME,
+            'USER': DB_USERNAME,
+            'PASSWORD': DB_PASSWORD,
+            'HOST': os.getenv('DB_HOST', 'localhost'),
+            'PORT': os.getenv('DB_PORT', '5432'),
+        }
+    }
 
 
 # Password validation
@@ -144,3 +153,8 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 AUTH_USER_MODEL = 'mojo_app.CustomUser'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Apply Heroku settings only when running on a Heroku dyno
+if os.getenv('DYNO'):
+    import django_heroku
+    django_heroku.settings(locals())
