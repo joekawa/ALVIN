@@ -1,0 +1,316 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="container py-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <!-- Trip header -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h1 class="h3 mb-1">{{ trip.trip_name }}</h1>
+                        <p class="text-muted mb-0">
+                            <i class="fas fa-map-marker-alt text-danger mr-1"></i>
+                            {{ trip.destination_city }}
+                            <span class="mx-2">•</span>
+                            <i class="far fa-calendar-alt mr-1"></i>{{ trip.start_date }}
+                            <span class="mx-1">→</span>
+                            <i class="far fa-calendar-check mr-1"></i>{{ trip.end_date }}
+                        </p>
+                        <div class="d-flex align-items-center flex-wrap gap-2 mt-1">
+                            <span class="small text-muted me-2">Participants:</span>
+                            <div class="d-flex flex-wrap gap-1">
+                                {% for p in participant %}
+                                    {% if can_manage_participants %}
+                                        <button type="button" class="badge bg-light text-muted border btn p-2" data-bs-toggle="modal" data-bs-target="#editParticipantModal-{{ p.id }}">
+                                            {{ p.user }}
+                                        </button>
+                                        <!-- Edit Participant Role Modal -->
+                                        <div class="modal fade" id="editParticipantModal-{{ p.id }}" tabindex="-1" aria-labelledby="editParticipantModalLabel-{{ p.id }}" aria-hidden="true">
+                                            <div class="modal-dialog modal-sm">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="editParticipantModalLabel-{{ p.id }}">Update role</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <form method="post" action="{% url 'mojo:update_participant_role' trip_id=trip.uuid participant_id=p.id %}">
+                                                            {% csrf_token %}
+                                                            <div class="mb-2">
+                                                                <label for="role-{{ p.id }}" class="form-label small">Role</label>
+                                                                <select id="role-{{ p.id }}" name="role" class="form-select form-select-sm">
+                                                                    <option value="owner" {% if p.role == 'owner' %}selected{% endif %}>Owner</option>
+                                                                    <option value="contributor" {% if p.role == 'contributor' %}selected{% endif %}>Contributor</option>
+                                                                    <option value="viewer" {% if p.role == 'viewer' %}selected{% endif %}>Viewer</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="d-flex justify-content-end gap-2">
+                                                                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                                                <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <span class="badge bg-light text-muted border">{{ p.user }}</span>
+                                    {% endif %}
+                                {% empty %}
+                                    <span class="text-muted small">You haven't shared the trip with anyone.</span>
+                                {% endfor %}
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#shareTripModal">
+                                <i class="fas fa-share-alt me-1"></i>Share
+                            </button>
+                        </div>
+
+                        <!-- Share Trip Modal -->
+                        <div class="modal fade" id="shareTripModal" tabindex="-1" aria-labelledby="shareTripModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-sm">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="shareTripModalLabel">Share with a friend</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form method="post" action="{% url 'mojo:share_trip' trip_id=trip.uuid %}" class="needs-validation" novalidate>
+                                            {% csrf_token %}
+                                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                            <div class="mb-3">
+                                                <label for="share-email" class="form-label">Email address</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                                    <input type="email" class="form-control" id="share-email" name="email" placeholder="friend@example.com" required>
+                                                    <div class="invalid-feedback">Please enter a valid email.</div>
+                                                </div>
+                                                <div class="form-text">We’ll send an invite to collaborate on this trip.</div>
+                                            </div>
+                                            <div class="d-flex justify-content-end gap-2">
+                                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <button type="submit" class="btn btn-primary">Share</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trip Plan -->
+                <div class="mb-4">
+
+                    {% if plan_items %}
+                    <div class="d-flex align-items-center mb-2">
+
+                        <h5 class="mb-0 me-2">Trip Plan</h5>
+                            <span class="badge bg-secondary">{{ plan_items|length }}</span>
+                    </div>
+                        <ul class="list-group">
+                            {% for item in plan_items %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>{{ item.activity.name }}</strong>
+                                        <div class="text-muted small">
+                                          {% if item.activity.url %}
+                                            <a href="{{ item.activity.url }}" target="_blank">{{ item.activity.location_string }}</a>
+                                          {% else %}
+                                            {{ item.activity.location_string }}
+                                          {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center flex-wrap gap-2">
+                                        {% if is_editor %}
+                                        <!-- Schedule form -->
+                                        <form method="post" action="{% url 'mojo:update_plan_item' trip_id=trip.uuid plan_item_id=item.id %}" class="d-flex align-items-center gap-1">
+                                            {% csrf_token %}
+                                            <input type="date" name="scheduled_date" class="form-control form-control-sm" value="{{ item.scheduled_date|date:'Y-m-d' }}" style="width: 11rem;">
+                                            <button type="submit" class="btn btn-sm btn-outline-secondary" title="Save schedule">
+                                                <i class="fas fa-save"></i>
+                                            </button>
+                                        </form>
+                                        <form method="post" action="{% url 'mojo:delete_plan_item' trip_id=trip.uuid plan_item_id=item.id %}">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Remove from plan">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                        {% elif item.scheduled_date or item.scheduled_time %}
+                                          <span class="text-muted small">
+                                            Scheduled: {% if item.scheduled_date %}{{ item.scheduled_date|date:"M j, Y" }}{% endif %}{% if item.scheduled_time %} {{ item.scheduled_time|time:"H:i" }}{% endif %}
+                                          </span>
+                                        {% endif %}
+
+                                        <!-- Comments trigger -->
+                                        <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#plan-comments-{{ item.id }}">
+                                            <i class="far fa-comments"></i>
+                                        </button>
+                                    </div>
+                                </li>
+                                <!-- Comments Modal for plan item -->
+                                <div class="modal fade" id="plan-comments-{{ item.id }}" tabindex="-1" aria-labelledby="plan-comments-{{ item.id }}-label" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                                        <div class="modal-content shadow-sm border-0">
+                                            <div class="modal-header bg-light border-0">
+                                                <h5 class="modal-title" id="plan-comments-{{ item.id }}-label">
+                                                    <i class="far fa-comments mr-2"></i> Plan Item Comments
+                                                </h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <ul class="list-group mb-3">
+                                                    {% for c in item.plan_comments.all %}
+                                                        <li class="list-group-item">
+                                                            <div class="d-flex justify-content-between">
+                                                                <strong class="me-2">{{ c.created_by }}</strong>
+                                                                <small class="text-muted">{{ c.created_at|date:"M j, Y g:i a" }}</small>
+                                                            </div>
+                                                            <div>{{ c.comment }}</div>
+                                                        </li>
+                                                    {% empty %}
+                                                        <li class="list-group-item text-muted">No comments yet.</li>
+                                                    {% endfor %}
+                                                </ul>
+
+                                                <!-- Add comment form (any participant) -->
+                                                <form method="post" action="{% url 'mojo:add_plan_item_comment' trip_id=trip.uuid plan_item_id=item.id %}">
+                                                    {% csrf_token %}
+                                                    <div class="input-group">
+                                                        <input type="text" name="comment" class="form-control" placeholder="Add a comment" required>
+                                                        <button type="submit" class="btn btn-primary">Post</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+<!--                        <p class="text-muted mb-0">No items in the plan yet. Add suggestions below.</p>-->
+                    {% endif %}
+                </div>
+
+                <!-- Activities chips -->
+                <div class="mb-3">
+                    <h5 class="mb-2">Activities</h5>
+                    <div class="row g-2">
+                        {% for activity in activities %}
+                            <div class="col-12 col-sm-6 col-lg-3">
+                                <span class="badge rounded-pill bg-secondary p-2 d-flex justify-content-between align-items-center w-100">
+                                    <span class="text-white">{{ activity.activity_name }}</span>
+                                    <a href="{% url 'mojo:delete_user_entered_activity' user_generated_trip_activity_id=activity.id %}" class="text-white text-decoration-none ms-2" title="Remove">
+                                        <i class="fas fa-window-close" aria-hidden="true"></i>
+                                    </a>
+                                </span>
+                            </div>
+                        {% empty %}
+                            <div class="col-12"><p class="text-muted mb-0">Adding activities below will help generate ideas for your trip.</p></div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Add activity -->
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <form class="input-group" method="post" action="{% url 'mojo:add_activity' trip_id=trip.uuid %}">
+                            {% csrf_token %}
+                            <input type="text" name="activity_name" class="form-control" placeholder="What do you want to do on your trip?">
+                            <button type="submit" class="btn btn-primary"><i class="fas fa-plus-square"></i></button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Generate itinerary -->
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <form method="post" action="{% url 'mojo:generate_itinerary' trip_id=trip.uuid %}">
+                            {% csrf_token %}
+                            <button class="btn btn-outline-dark"><i class="fas fa-magic mr-1"></i> Generate Ideas</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Suggestions / Itinerary -->
+                {% if model_suggestions %}
+                <h5 class="mb-2">Trip Ideas</h5>
+                {% endif %}
+                <div class="row">
+                    {% for activity_suggestion in model_suggestions %}
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100 shadow-sm border-0">
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title mb-1">{{ activity_suggestion.name }}</h5>
+                                    <h6 class="card-subtitle mb-2 text-muted">
+                                        <a href="{{ activity_suggestion.url }}" target="_blank">{{ activity_suggestion.location_string }}</a>
+                                    </h6>
+                                    <p class="card-text">{{ activity_suggestion.description }}</p>
+
+                                    <div class="user-feedback mt-auto d-flex align-items-center gap-2">
+                                        {% if is_editor and activity_suggestion.id not in planned_activity_ids %}
+                                        <form method="post" action="{% url 'mojo:add_plan_item' trip_id=trip.uuid activity_id=activity_suggestion.id %}">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-plus me-1"></i>Add to plan
+                                            </button>
+                                        </form>
+                                        {% endif %}
+<!--                                        <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#comments-modal-{{ forloop.counter }}"><i class="far fa-comments"></i></button>
+
+                                        <div class="modal fade" id="comments-modal-{{ forloop.counter }}" tabindex="-1" aria-labelledby="comments-modal-{{ forloop.counter }}-label" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                                                <div class="modal-content shadow-sm border-0">
+                                                    <div class="modal-header bg-light border-0">
+                                                        <h5 class="modal-title" id="comments-modal-{{ forloop.counter }}-label">
+                                                            <i class="far fa-comments mr-2"></i> Comments
+                                                        </h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        {% if activity_suggestion.tripactivitycomment_set.all %}
+                                                            <div class="mb-3">
+                                                                <ul class="list-group list-group-flush" id="comments-list">
+                                                                    {% for comment in activity_suggestion.tripactivitycomment_set.all %}
+                                                                        <li class="list-group-item px-0">
+                                                                            <strong>{{ comment.created_by }}</strong>
+                                                                            <div class="text-muted small">{{ comment.comment }}</div>
+                                                                        </li>
+                                                                    {% endfor %}
+                                                                </ul>
+                                                            </div>
+                                                        {% else %}
+                                                            <p class="text-muted">No comments yet. Be the first to share a thought.</p>
+                                                        {% endif %}
+
+                                                        <form id="add-comment-form-{{ forloop.counter }}" action="{% url 'mojo:add_comment' trip_activity_id=activity_suggestion.id %}" method="post">
+                                                            {% csrf_token %}
+                                                            <div class="form-group mb-0">
+                                                                <label for="comment-text-{{ forloop.counter }}" class="form-label">Add a comment</label>
+                                                                <textarea id="comment-text-{{ forloop.counter }}" name="comment" class="form-control" rows="3" placeholder="Share your thoughts..."></textarea>
+                                                            </div>
+                                                    </div>
+                                                    <div class="modal-footer border-0">
+                                                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                                                        <button type="submit" class="btn btn-primary">Post Comment</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    -->
+                                        <a href="{% url 'mojo:heart_model_suggestion' model_trip_activity_id=activity_suggestion.id %}" class="me-2">
+                                            <i class="{% if activity_suggestion.id in saved_place_ids %}fas fa-heart text-secondary{% elif activity_suggestion.id in no_status_place_ids %}far fa-heart text-secondary{% endif %}"></i>
+                                        </a>
+                                        <a href="{% url 'mojo:reject_model_suggestion' model_trip_activity_id=activity_suggestion.id %}" class="me-2">
+                                            <i class="fas fa-times"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

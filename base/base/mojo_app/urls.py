@@ -1,0 +1,35 @@
+from django.urls import path
+from django.contrib.auth.views import LogoutView
+from django.contrib.staticfiles import views
+
+from . import views
+
+app_name = 'mojo'
+
+urlpatterns = [
+  path('', views.index, name='index'),
+  path('login/', views.login_view, name='login'),
+  path('signup/', views.signup, name='signup'),
+  path('profile/', views.profile, name='profile'),
+  path('welcome/', views.welcome, name='welcome'),
+  path('create_trip_form/', views.create_trip_form, name='create_trip_form'),
+  path('create_trip/', views.create_trip, name='create_trip'),
+  path('logout/', LogoutView.as_view(next_page='mojo:login'), name='logout'),
+  path('trip/<uuid:trip_id>/details/', views.trip, name='trip'),
+  path('trip/<uuid:trip_id>/add_activity/', views.add_activity, name='add_activity'),
+  path('trip/<uuid:trip_id>/trip_details/', views.generate_itinerary, name='generate_itinerary'),
+  path('trip/<uuid:model_trip_activity_id>/heart/', views.heart_model_suggestion, name='heart_model_suggestion'),
+  path('trip/<uuid:model_trip_activity_id>/reject/', views.reject_model_suggestion, name='reject_model_suggestion'),
+  path('trip/<uuid:trip_id>/share_trip/', views.share_trip, name='share_trip'),
+  path('trip/<uuid:trip_activity_id>/add_comment/', views.add_comment, name='add_comment'),
+  path('trip/<user_generated_trip_activity_id>/delete_activity/', views.delete_user_entered_activity, name='delete_user_entered_activity'),
+  path('trip/<uuid:trip_id>/delete/', views.delete_trip, name='delete_trip'),
+  path('trip/<uuid:trip_id>/plan/add/<uuid:activity_id>/', views.add_plan_item, name='add_plan_item'),
+  path('trip/<uuid:trip_id>/plan/delete/<uuid:plan_item_id>/', views.delete_plan_item, name='delete_plan_item'),
+  path('trip/<uuid:trip_id>/plan/update/<uuid:plan_item_id>/', views.update_plan_item, name='update_plan_item'),
+  path('trip/<uuid:trip_id>/plan/move/<uuid:plan_item_id>/', views.move_plan_item, name='move_plan_item'),
+  path('trip/<uuid:trip_id>/participants/<uuid:participant_id>/role/', views.update_participant_role, name='update_participant_role'),
+  path('trip/<uuid:trip_id>/plan/<uuid:plan_item_id>/comment/', views.add_plan_item_comment, name='add_plan_item_comment'),
+]
+
+

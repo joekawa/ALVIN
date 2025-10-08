@@ -15,7 +15,7 @@ import re
 
 #* I NEED TO UPDATE THIS TO CHECK FOR ALL TRIPS THE USER HAS CREATED
 #* OR IS A PARTICIPANT OF
-@login_required(login_url='mojo:welcome')
+@login_required(login_url='mojo:login')
 def index(request):
     """
     Renders the index page, which contains a list of trips
