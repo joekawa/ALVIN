@@ -5,6 +5,5 @@ db.sqlite3
 postgres.m
 .staticfiles
 .env
-.python-version
 venv/
 base/.env
