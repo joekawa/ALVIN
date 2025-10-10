@@ -73,14 +73,20 @@ def signup(request):
     if form.is_valid():
       print("form is valid")
       user = form.save()
-      shared_trip = SharedTrip.objects.get(shared_with=user.email)
-      trip_participant = TripParticipant.objects.create(trip=shared_trip.trip,
-                                                       user=user,
-                                                       role="contributor")
       login(request, user)
+      print("user created")
+      # Add the new user as a participant to any trips shared with their email
+      shared_trips = SharedTrip.objects.filter(shared_with=user.email)
+      for st in shared_trips:
+        TripParticipant.objects.get_or_create(
+          trip=st.trip,
+          user=user,
+          defaults={"role": "contributor"}
+        )
       return redirect('mojo:index')
     else:
       print("form is not valid")
+      return render(request, 'signup.html', {'form': form})
   form = CustomUserCreationForm()
   return render(request, 'signup.html', {'form': form})
 

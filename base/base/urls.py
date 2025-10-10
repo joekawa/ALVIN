@@ -18,6 +18,6 @@ from django.urls import include, path
 
 urlpatterns = [
     path('', include('mojo_app.urls', namespace='mojo')),
-    #path('mojo/', include('mojo_app.urls', namespace='mojo')),
+    path('mojo/', include('mojo_app.urls', namespace='mojo_compatabile')),
     path('admin/', admin.site.urls),
 ]
